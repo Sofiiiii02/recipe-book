@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Book</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-2: #eef2ff;
+      --text: #121826;
+      --muted: #586174;
+      --primary: #4f46e5;
+      --primary-strong: #4338ca;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --ring: #818cf8;
+      --border: #d7dce7;
+      --chip: #e8ecff;
+      --shadow: 0 10px 30px rgba(24, 35, 66, 0.08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.4;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--ring);
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+      min-height: 100vh;
+      grid-template-rows: auto 1fr;
+    }
+
+    header {
+      background: linear-gradient(140deg, #312e81 0%, #4f46e5 45%, #6366f1 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 0.9rem;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.3rem, 1.2rem + 1vw, 2rem);
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      background: #fff;
+      color: #1f2a44;
+      border-radius: 10px;
+      padding: .55rem .85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { background: #0ea5e9; color: #fff; }
+    .btn.primary:hover { background: #0284c7; }
+    .btn.ghost { background: #eef2ff; }
+    .btn.danger { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+
+    .main {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1fr;
+      min-height: 0;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-height: 0;
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      overflow: hidden;
+    }
+
+    .sidebar .section {
+      padding: .9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .field {
+      display: grid;
+      gap: .25rem;
+      margin-bottom: .6rem;
+    }
+
+    .field label { font-size: .86rem; font-weight: 600; color: var(--muted); }
+
+    input[type="text"], input[type="number"], input[type="url"], select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .55rem .65rem;
+      background: #fff;
+    }
+
+    textarea { resize: vertical; min-height: 90px; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .45rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: var(--chip);
+      border: 1px solid #cad4ff;
+      border-radius: 999px;
+      padding: .25rem .65rem;
+      font-size: .82rem;
+    }
+
+    .recipe-list {
+      overflow: auto;
+      padding: .65rem;
+      display: grid;
+      gap: .55rem;
+      align-content: start;
+    }
+
+    .recipe-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 12px;
+      padding: .7rem;
+      cursor: pointer;
+      display: grid;
+      gap: .35rem;
+    }
+
+    .recipe-item.active {
+      border-color: #818cf8;
+      background: #eef2ff;
+    }
+
+    .recipe-meta {
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      font-size: .8rem;
+    }
+
+    .content {
+      overflow: auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+      align-content: start;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .9rem;
+      background: #fff;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .muted { color: var(--muted); }
+
+    .star {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: .45rem .7rem;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .star.active { background: #fff7cc; border-color: #facc15; }
+
+    .grid-2 {
+      display: grid;
+      gap: .8rem;
+      grid-template-columns: 1fr;
+    }
+
+    .times {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: .6rem;
+    }
+
+    .ingredients li, .steps li { margin-bottom: .5rem; }
+
+    .img-preview {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      display: block;
+      background: #f1f5f9;
+    }
+
+    .row-inline {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .dynamic-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 2fr auto;
+      gap: .45rem;
+      margin-bottom: .5rem;
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .45rem;
+      margin-bottom: .5rem;
+      align-items: start;
+    }
+
+    .step-controls {
+      display: flex;
+      gap: .3rem;
+      flex-direction: column;
+    }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 8px;
+      padding: .35rem .5rem;
+      cursor: pointer;
+      font-size: .85rem;
+    }
+
+    .toast-wrap {
+      position: fixed;
+      right: 1rem;
+      bottom: 1rem;
+      display: grid;
+      gap: .5rem;
+      z-index: 50;
+    }
+
+    .toast {
+      background: #111827;
+      color: #fff;
+      padding: .7rem .85rem;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      min-width: 220px;
+    }
+
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    .empty {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+    }
+
+    .cooking-mode {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .85rem;
+      background: #f8fafc;
+    }
+
+    .cooking-mode li {
+      font-size: 1.1rem;
+      margin-bottom: .8rem;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (min-width: 980px) {
+      .main { grid-template-columns: 370px 1fr; }
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .dynamic-row { grid-template-columns: 1fr 1fr; }
+      .dynamic-row input[name$="name"] { grid-column: span 2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-top">
+        <h1>🍲 Recipe Book</h1>
+        <div class="actions">
+          <button class="btn primary" id="newRecipeBtn">New Recipe</button>
+          <button class="btn" id="exportBtn">Export JSON</button>
+          <button class="btn" id="importBtn">Import JSON</button>
+          <button class="btn danger" id="resetBtn">Reset All</button>
+        </div>
+      </div>
+      <p style="margin:0;opacity:.9;">Save your favorite recipes, scale ingredients, and cook step-by-step.</p>
+      <input id="importFile" type="file" accept="application/json" class="hidden" aria-hidden="true" />
+    </header>
+
+    <div class="main">
+      <aside class="panel sidebar" aria-label="Recipe list and filters">
+        <div class="section">
+          <div class="field">
+            <label for="search">Search recipes</label>
+            <input id="search" type="text" placeholder="Title, ingredients, tags..." />
+          </div>
+          <div class="field">
+            <label for="filterCategory">Category</label>
+            <select id="filterCategory">
+              <option value="">All categories</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filterTags">Tags (multi-select)</label>
+            <select id="filterTags" multiple size="4" aria-label="Filter by tags"></select>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="sortBy">Sort</label>
+            <select id="sortBy">
+              <option value="updated">Last updated</option>
+              <option value="az">A–Z</option>
+              <option value="fav">Favorites first</option>
+            </select>
+          </div>
+        </div>
+        <div class="section row-inline" style="justify-content:space-between;">
+          <strong id="recipeCount">0 recipes</strong>
+          <button class="btn ghost" id="clearFiltersBtn">Clear filters</button>
+        </div>
+        <div class="recipe-list" id="recipeList" role="listbox" aria-label="Recipes"></div>
+      </aside>
+
+      <main class="panel content" id="content" aria-live="polite"></main>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = 'recipeBookData.v1';
+      const CATEGORIES = ['Appetizer', 'Main', 'Dessert', 'Snack', 'Drink', 'Breakfast', 'Soup', 'Salad', 'Other'];
+      const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+
+      const state = {
+        recipes: [],
+        selectedId: null,
+        mode: 'detail',
+        filters: { search: '', category: '', tags: [], sort: 'updated' },
+        wakeLock: null,
+      };
+
+      const el = (id) => document.getElementById(id);
+      const recipeListEl = el('recipeList');
+      const contentEl = el('content');
+
+      function uid() {
+        if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function nowISO() { return new Date().toISOString(); }
+
+      function toast(message, type = '') {
+        const node = document.createElement('div');
+        node.className = `toast ${type}`.trim();
+        node.textContent = message;
+        el('toastWrap').appendChild(node);
+        setTimeout(() => node.remove(), 2800);
+      }
+
+      function parseTags(text) {
+        return [...new Set((text || '').split(',').map(t => t.trim()).filter(Boolean))];
+      }
+
+      function categoryOptions(includeAll = false, selected = '') {
+        const base = includeAll ? '<option value="">All categories</option>' : '';
+        return base + CATEGORIES.map(c => `<option value="${escapeHtml(c)}" ${selected === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('');
+      }
+
+      function getImage(recipe) {
+        return recipe.imageDataUrl || recipe.imageUrl || '';
+      }
+
+      function sanitizeRecipe(raw) {
+        const id = raw?.id || uid();
+        const createdAt = raw?.createdAt || nowISO();
+        const updatedAt = raw?.updatedAt || nowISO();
+        const ingredients = Array.isArray(raw?.ingredients) ? raw.ingredients : [];
+        const steps = Array.isArray(raw?.steps) ? raw.steps : [];
+        const tags = Array.isArray(raw?.tags) ? raw.tags.filter(Boolean).map(String) : [];
+
+        return {
+          id,
+          title: String(raw?.title || '').trim(),
+          description: String(raw?.description || ''),
+          category: String(raw?.category || 'Other'),
+          tags,
+          servings: Number(raw?.servings || 1),
+          prepMin: Number(raw?.prepMin || 0),
+          cookMin: Number(raw?.cookMin || 0),
+          totalMin: Number(raw?.totalMin || (Number(raw?.prepMin || 0) + Number(raw?.cookMin || 0))),
+          ingredients: ingredients.map(i => ({
+            amount: String(i?.amount ?? ''),
+            unit: String(i?.unit ?? ''),
+            name: String(i?.name ?? ''),
+          })).filter(i => i.name),
+          steps: steps.map(s => ({ text: String(s?.text ?? '').trim(), done: Boolean(s?.done) })).filter(s => s.text),
+          favorite: Boolean(raw?.favorite),
+          imageDataUrl: typeof raw?.imageDataUrl === 'string' ? raw.imageDataUrl : '',
+          imageUrl: typeof raw?.imageUrl === 'string' ? raw.imageUrl : '',
+          createdAt,
+          updatedAt,
+        };
+      }
+
+      function defaultRecipes() {
+        const created = nowISO();
+        return [
+          {
+            id: uid(),
+            title: 'Lemon Garlic Chicken Bowl',
+            description: 'A bright weeknight bowl with juicy chicken and herbed rice.',
+            category: 'Main',
+            tags: ['quick', 'high-protein', 'meal prep'],
+            servings: 2,
+            prepMin: 15,
+            cookMin: 20,
+            totalMin: 35,
+            ingredients: [
+              { amount: '400', unit: 'g', name: 'Chicken breast' },
+              { amount: '1', unit: 'cup', name: 'Cooked rice' },
+              { amount: '2', unit: 'tbsp', name: 'Olive oil' },
+              { amount: '1', unit: '', name: 'Lemon (zested and juiced)' },
+              { amount: '2', unit: 'cloves', name: 'Garlic, minced' },
+            ],
+            steps: [
+              { text: 'Marinate chicken with olive oil, lemon, garlic, salt, and pepper for 10 minutes.', done: false },
+              { text: 'Sear chicken on medium-high heat until cooked through.', done: false },
+              { text: 'Slice chicken and serve over warm rice with extra lemon juice.', done: false },
+            ],
+            favorite: true,
+            imageDataUrl: '',
+            imageUrl: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1200&q=80',
+            createdAt: created,
+            updatedAt: created,
+          },
+          {
+            id: uid(),
+            title: 'Berry Yogurt Parfait',
+            description: 'Layered breakfast parfait with fresh berries and crunchy granola.',
+            category: 'Breakfast',
+            tags: ['no-cook', 'sweet', 'breakfast'],
+            servings: 1,
+            prepMin: 10,
+            cookMin: 0,
+            totalMin: 10,
+            ingredients: [
+              { amount: '1', unit: 'cup', name: 'Greek yogurt' },
+              { amount: '1/2', unit: 'cup', name: 'Mixed berries' },
+              { amount: '1/4', unit: 'cup', name: 'Granola' },
+              { amount: '1', unit: 'tsp', name: 'Honey' },
+            ],
+            steps: [
+              { text: 'Add half the yogurt to a glass.', done: false },
+              { text: 'Layer berries and granola, then repeat.', done: false },
+              { text: 'Finish with honey and serve immediately.', done: false },
+            ],
+            favorite: false,
+            imageDataUrl: '',
+            imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=1200&q=80',
+            createdAt: created,
+            updatedAt: created,
+          },
+          {
+            id: uid(),
+            title: 'Classic Tomato Basil Soup',
+            description: 'Comforting creamy tomato soup with basil and a touch of cream.',
+            category: 'Soup',
+            tags: ['comfort', 'vegetarian'],
+            servings: 4,
+            prepMin: 10,
+            cookMin: 25,
+            totalMin: 35,
+            ingredients: [
+              { amount: '1', unit: 'tbsp', name: 'Olive oil' },
+              { amount: '1', unit: '', name: 'Onion, diced' },
+              { amount: '2', unit: 'cloves', name: 'Garlic, minced' },
+              { amount: '800', unit: 'g', name: 'Canned tomatoes' },
+              { amount: '2', unit: 'cups', name: 'Vegetable stock' },
+              { amount: '1/4', unit: 'cup', name: 'Heavy cream' },
+            ],
+            steps: [
+              { text: 'Sauté onion and garlic in olive oil until translucent.', done: false },
+              { text: 'Add tomatoes and stock, simmer 20 minutes.', done: false },
+              { text: 'Blend smooth, stir in cream, and season.', done: false },
+            ],
+            favorite: false,
+            imageDataUrl: '',
+            imageUrl: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=1200&q=80',
+            createdAt: created,
+            updatedAt: created,
+          }
+        ].map(sanitizeRecipe);
+      }
+
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.recipes));
+        } catch (err) {
+          const msg = String(err?.message || err);
+          if (/quota/i.test(msg)) {
+            toast('Storage limit reached. Try smaller images or remove some recipes.', 'error');
+          } else {
+            toast('Failed to save recipes.', 'error');
+          }
+          throw err;
+        }
+      }
+
+      function load() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          state.recipes = defaultRecipes();
+          save();
+          state.selectedId = state.recipes[0]?.id || null;
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) throw new Error('Invalid recipe collection.');
+          state.recipes = parsed.map(sanitizeRecipe).filter(r => r.title);
+          state.selectedId = state.recipes[0]?.id || null;
+        } catch {
+          toast('Data was corrupted. Starter recipes were restored.', 'error');
+          state.recipes = defaultRecipes();
+          save();
+          state.selectedId = state.recipes[0]?.id || null;
+        }
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+      }
+
+      function matches(recipe) {
+        const q = state.filters.search.trim().toLowerCase();
+        const inCategory = !state.filters.category || recipe.category === state.filters.category;
+        const inTags = !state.filters.tags.length || state.filters.tags.every(t => recipe.tags.includes(t));
+        if (!q) return inCategory && inTags;
+        const haystack = [
+          recipe.title,
+          recipe.description,
+          recipe.tags.join(' '),
+          recipe.ingredients.map(i => `${i.amount} ${i.unit} ${i.name}`).join(' '),
+        ].join(' ').toLowerCase();
+        return inCategory && inTags && haystack.includes(q);
+      }
+
+      function filteredRecipes() {
+        const arr = state.recipes.filter(matches);
+        const s = state.filters.sort;
+        arr.sort((a, b) => {
+          if (s === 'az') return a.title.localeCompare(b.title);
+          if (s === 'fav') {
+            if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+            return new Date(b.updatedAt) - new Date(a.updatedAt);
+          }
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+        });
+        return arr;
+      }
+
+      function updateFilterLists() {
+        el('filterCategory').innerHTML = categoryOptions(true, state.filters.category);
+        const tags = [...new Set(state.recipes.flatMap(r => r.tags))].sort((a, b) => a.localeCompare(b));
+        el('filterTags').innerHTML = tags.map(tag => `<option value="${escapeHtml(tag)}" ${state.filters.tags.includes(tag) ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('');
+      }
+
+      function renderRecipeList() {
+        const list = filteredRecipes();
+        el('recipeCount').textContent = `${list.length} recipe${list.length === 1 ? '' : 's'}`;
+        if (!list.length) {
+          recipeListEl.innerHTML = '<div class="empty">No recipes match your filters.</div>';
+          return;
+        }
+        recipeListEl.innerHTML = list.map(r => `
+          <button class="recipe-item ${r.id === state.selectedId && state.mode === 'detail' ? 'active' : ''}" role="option" aria-selected="${r.id === state.selectedId}" data-id="${r.id}">
+            <strong>${escapeHtml(r.title)}</strong>
+            <div class="recipe-meta">
+              <span>${escapeHtml(r.category || 'Other')}</span>
+              ${r.favorite ? '<span>⭐ Favorite</span>' : ''}
+              <span>${r.totalMin || (r.prepMin + r.cookMin)} min</span>
+            </div>
+            <div class="chips">${r.tags.slice(0, 3).map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('')}</div>
+          </button>
+        `).join('');
+      }
+
+      function renderEmptyState() {
+        contentEl.innerHTML = `
+          <div class="empty card">
+            <h2 style="margin-top:0;">No recipes yet</h2>
+            <p>Create your first recipe to get started.</p>
+            <button class="btn primary" id="emptyNewBtn">Create Recipe</button>
+          </div>
+        `;
+        el('emptyNewBtn').addEventListener('click', () => openForm());
+      }
+
+      function renderDetail() {
+        const recipe = state.recipes.find(r => r.id === state.selectedId);
+        if (!recipe) return renderEmptyState();
+        const image = getImage(recipe);
+
+        contentEl.innerHTML = `
+          <article>
+            <div class="title-row card">
+              <div>
+                <h2 style="margin:.2rem 0;">${escapeHtml(recipe.title)}</h2>
+                <div class="muted">${escapeHtml(recipe.category || 'Other')}</div>
+                <div class="chips" style="margin-top:.5rem;">${recipe.tags.map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('')}</div>
+              </div>
+              <div class="row-inline">
+                <button class="star ${recipe.favorite ? 'active' : ''}" id="favoriteBtn" aria-pressed="${recipe.favorite}">${recipe.favorite ? '⭐ Favorited' : '☆ Favorite'}</button>
+                <button class="btn" id="editBtn">Edit</button>
+              </div>
+            </div>
+
+            ${image ? `<img class="img-preview" src="${escapeHtml(image)}" alt="Image for ${escapeHtml(recipe.title)}" />` : ''}
+
+            <div class="grid-2">
+              <section class="card">
+                <h3 style="margin-top:0;">Overview</h3>
+                <p>${escapeHtml(recipe.description || 'No notes yet.')}</p>
+                <div class="times">
+                  <div><strong>Prep:</strong> ${recipe.prepMin} min</div>
+                  <div><strong>Cook:</strong> ${recipe.cookMin} min</div>
+                  <div><strong>Total:</strong> ${recipe.totalMin || (recipe.prepMin + recipe.cookMin)} min</div>
+                  <div><strong>Servings:</strong> ${recipe.servings}</div>
+                </div>
+              </section>
+
+              <section class="card">
+                <h3 style="margin-top:0;">Scale servings</h3>
+                <div class="row-inline">
+                  <label for="scaleServings">Target servings</label>
+                  <input id="scaleServings" type="number" min="1" step="1" value="${recipe.servings}" style="max-width:120px;" />
+                  <button class="btn" id="applyScaleBtn">Apply</button>
+                </div>
+                <p class="muted" style="margin-bottom:0;">Numeric amounts scale automatically; text amounts remain unchanged.</p>
+              </section>
+            </div>
+
+            <section class="card">
+              <h3 style="margin-top:0;">Ingredients</h3>
+              <ul class="ingredients">
+                ${recipe.ingredients.length ? recipe.ingredients.map(i => `<li>${escapeHtml([i.amount, i.unit, i.name].filter(Boolean).join(' '))}</li>`).join('') : '<li>No ingredients listed.</li>'}
+              </ul>
+            </section>
+
+            <section class="card">
+              <h3 style="margin-top:0;">Steps</h3>
+              <ol class="steps">
+                ${recipe.steps.length ? recipe.steps.map(s => `<li>${escapeHtml(s.text)}</li>`).join('') : '<li>No steps listed.</li>'}
+              </ol>
+              <button class="btn ghost" id="cookModeBtn">Cooking Mode</button>
+            </section>
+
+            <section class="card hidden" id="cookingModeWrap">
+              <div class="title-row">
+                <h3 style="margin:.1rem 0;">Cooking Mode</h3>
+                <button class="btn" id="closeCookMode">Close</button>
+              </div>
+              <p class="muted" id="wakeLockStatus"></p>
+              <ol class="cooking-mode" id="cookingChecklist">
+                ${recipe.steps.map((s, idx) => `<li><label><input type="checkbox" data-step="${idx}" ${s.done ? 'checked' : ''} /> ${escapeHtml(s.text)}</label></li>`).join('')}
+              </ol>
+            </section>
+          </article>
+        `;
+
+        el('favoriteBtn').addEventListener('click', () => {
+          recipe.favorite = !recipe.favorite;
+          recipe.updatedAt = nowISO();
+          save();
+          renderAll();
+        });
+
+        el('editBtn').addEventListener('click', () => openForm(recipe.id));
+        el('applyScaleBtn').addEventListener('click', () => applyScaling(recipe.id));
+        el('cookModeBtn').addEventListener('click', () => toggleCookingMode(true, recipe.id));
+        el('closeCookMode').addEventListener('click', () => toggleCookingMode(false, recipe.id));
+        el('cookingChecklist').addEventListener('change', (e) => {
+          if (e.target.matches('input[type="checkbox"]')) {
+            const i = Number(e.target.dataset.step);
+            if (!Number.isNaN(i) && recipe.steps[i]) {
+              recipe.steps[i].done = e.target.checked;
+              recipe.updatedAt = nowISO();
+              save();
+            }
+          }
+        });
+      }
+
+      async function toggleCookingMode(isOn, recipeId) {
+        const wrap = el('cookingModeWrap');
+        if (!wrap) return;
+        const status = el('wakeLockStatus');
+        wrap.classList.toggle('hidden', !isOn);
+        if (!isOn) {
+          if (state.wakeLock) {
+            try { await state.wakeLock.release(); } catch {}
+            state.wakeLock = null;
+          }
+          status.textContent = 'Cooking mode closed.';
+          return;
+        }
+
+        if ('wakeLock' in navigator && navigator.wakeLock?.request) {
+          try {
+            state.wakeLock = await navigator.wakeLock.request('screen');
+            status.textContent = 'Screen wake lock enabled while cooking mode is open.';
+            state.wakeLock.addEventListener('release', () => {
+              status.textContent = 'Wake lock released by the browser.';
+            });
+          } catch {
+            status.textContent = 'Wake lock could not be activated. Keep your screen awake manually.';
+          }
+        } else {
+          status.textContent = 'Wake Lock API is not supported in this browser. Keep your screen awake manually.';
+        }
+
+        const recipe = state.recipes.find(r => r.id === recipeId);
+        if (recipe) {
+          recipe.updatedAt = nowISO();
+          save();
+        }
+      }
+
+      function parseNumericAmount(value) {
+        const v = String(value).trim();
+        if (/^\d+(?:\.\d+)?$/.test(v)) return Number(v);
+        if (/^\d+\s+\d+\/\d+$/.test(v)) {
+          const [whole, frac] = v.split(/\s+/);
+          const [n, d] = frac.split('/').map(Number);
+          if (d) return Number(whole) + n / d;
+        }
+        if (/^\d+\/\d+$/.test(v)) {
+          const [n, d] = v.split('/').map(Number);
+          if (d) return n / d;
+        }
+        return null;
+      }
+
+      function amountToString(num) {
+        if (!Number.isFinite(num)) return '';
+        const rounded = Math.round(num * 100) / 100;
+        return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+      }
+
+      function applyScaling(recipeId) {
+        const recipe = state.recipes.find(r => r.id === recipeId);
+        if (!recipe) return;
+        const target = Number(el('scaleServings').value);
+        if (!target || target <= 0) return toast('Enter a valid target servings number.', 'error');
+        const factor = target / recipe.servings;
+        recipe.ingredients = recipe.ingredients.map(i => {
+          const num = parseNumericAmount(i.amount);
+          if (num === null) return i;
+          return { ...i, amount: amountToString(num * factor) };
+        });
+        recipe.servings = target;
+        recipe.updatedAt = nowISO();
+        save();
+        toast('Ingredients scaled successfully.', 'success');
+        renderAll();
+      }
+
+      function openForm(id = null) {
+        state.mode = 'form';
+        const recipe = id ? state.recipes.find(r => r.id === id) : null;
+        const draft = recipe ? structuredClone(recipe) : sanitizeRecipe({
+          id: uid(),
+          title: '',
+          description: '',
+          category: 'Main',
+          tags: [],
+          servings: 1,
+          prepMin: 0,
+          cookMin: 0,
+          totalMin: 0,
+          ingredients: [{ amount: '', unit: '', name: '' }],
+          steps: [{ text: '', done: false }],
+          favorite: false,
+          imageDataUrl: '',
+          imageUrl: '',
+          createdAt: nowISO(),
+          updatedAt: nowISO(),
+        });
+        renderForm(draft, Boolean(recipe));
+      }
+
+      function renderForm(recipe, isEditing) {
+        contentEl.innerHTML = `
+          <form id="recipeForm" class="card" novalidate>
+            <div class="title-row">
+              <h2 style="margin:.2rem 0;">${isEditing ? 'Edit recipe' : 'New recipe'}</h2>
+              <div class="row-inline">
+                <button type="submit" class="btn primary">Save</button>
+                <button type="button" class="btn" id="cancelFormBtn">Cancel</button>
+                ${isEditing ? '<button type="button" class="btn danger" id="deleteBtn">Delete</button>' : ''}
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div>
+                <div class="field"><label>Title *</label><input name="title" required value="${escapeHtml(recipe.title)}" /></div>
+                <div class="field"><label>Description / Notes</label><textarea name="description">${escapeHtml(recipe.description)}</textarea></div>
+                <div class="field"><label>Category</label>
+                  <select name="category">${categoryOptions(false, recipe.category)}</select>
+                </div>
+                <div class="field"><label>Tags (comma-separated)</label><input name="tags" value="${escapeHtml(recipe.tags.join(', '))}" /></div>
+              </div>
+              <div>
+                <div class="field"><label>Servings</label><input name="servings" type="number" min="1" value="${recipe.servings}" /></div>
+                <div class="times">
+                  <div class="field"><label>Prep min</label><input name="prepMin" type="number" min="0" value="${recipe.prepMin}" /></div>
+                  <div class="field"><label>Cook min</label><input name="cookMin" type="number" min="0" value="${recipe.cookMin}" /></div>
+                </div>
+                <div class="field"><label>Total min (auto)</label><input name="totalMin" type="number" readonly value="${recipe.totalMin}" /></div>
+
+                <div class="field"><label>Image upload (JPEG/PNG)</label><input name="imageFile" type="file" accept="image/jpeg,image/png" /></div>
+                <div class="field"><label>or image URL</label><input name="imageUrl" type="url" placeholder="https://..." value="${escapeHtml(recipe.imageUrl || '')}" /></div>
+                <img class="img-preview ${getImage(recipe) ? '' : 'hidden'}" id="formImagePreview" src="${escapeHtml(getImage(recipe))}" alt="Recipe image preview" />
+              </div>
+            </div>
+
+            <section class="card" style="margin-top:1rem;">
+              <div class="title-row"><h3 style="margin:.2rem 0;">Ingredients</h3><button type="button" class="btn" id="addIngredientBtn">+ Ingredient</button></div>
+              <div id="ingredientsWrap"></div>
+            </section>
+
+            <section class="card" style="margin-top:1rem;">
+              <div class="title-row"><h3 style="margin:.2rem 0;">Steps</h3><button type="button" class="btn" id="addStepBtn">+ Step</button></div>
+              <div id="stepsWrap"></div>
+            </section>
+          </form>
+        `;
+
+        const form = el('recipeForm');
+        const ingredientsWrap = el('ingredientsWrap');
+        const stepsWrap = el('stepsWrap');
+        const totalInput = form.elements.totalMin;
+
+        if (!recipe.ingredients.length) recipe.ingredients.push({ amount: '', unit: '', name: '' });
+        if (!recipe.steps.length) recipe.steps.push({ text: '', done: false });
+
+        const redrawIngredients = () => {
+          ingredientsWrap.innerHTML = recipe.ingredients.map((ing, idx) => `
+            <div class="dynamic-row">
+              <input type="text" placeholder="Amount" value="${escapeHtml(ing.amount)}" data-ing="${idx}" data-field="amount" />
+              <input type="text" placeholder="Unit" value="${escapeHtml(ing.unit)}" data-ing="${idx}" data-field="unit" />
+              <input type="text" placeholder="Ingredient name" value="${escapeHtml(ing.name)}" data-ing="${idx}" data-field="name" />
+              <button type="button" class="icon-btn" data-remove-ing="${idx}" aria-label="Remove ingredient">✕</button>
+            </div>
+          `).join('');
+        };
+
+        const redrawSteps = () => {
+          stepsWrap.innerHTML = recipe.steps.map((st, idx) => `
+            <div class="step-row">
+              <textarea placeholder="Describe this step" data-step="${idx}" data-field="text">${escapeHtml(st.text)}</textarea>
+              <div class="step-controls">
+                <button type="button" class="icon-btn" data-step-up="${idx}" ${idx === 0 ? 'disabled' : ''} aria-label="Move step up">↑</button>
+                <button type="button" class="icon-btn" data-step-down="${idx}" ${idx === recipe.steps.length - 1 ? 'disabled' : ''} aria-label="Move step down">↓</button>
+                <button type="button" class="icon-btn" data-remove-step="${idx}" aria-label="Remove step">✕</button>
+              </div>
+            </div>
+          `).join('');
+        };
+
+        const updateTotal = () => {
+          const prep = Number(form.elements.prepMin.value || 0);
+          const cook = Number(form.elements.cookMin.value || 0);
+          totalInput.value = prep + cook;
+        };
+
+        redrawIngredients();
+        redrawSteps();
+
+        form.addEventListener('input', (e) => {
+          if (e.target.name === 'prepMin' || e.target.name === 'cookMin') updateTotal();
+          const ingIdx = e.target.dataset.ing;
+          const stepIdx = e.target.dataset.step;
+          if (ingIdx !== undefined) recipe.ingredients[Number(ingIdx)][e.target.dataset.field] = e.target.value;
+          if (stepIdx !== undefined) recipe.steps[Number(stepIdx)][e.target.dataset.field] = e.target.value;
+        });
+
+        ingredientsWrap.addEventListener('click', (e) => {
+          const removeIdx = e.target.dataset.removeIng;
+          if (removeIdx !== undefined) {
+            recipe.ingredients.splice(Number(removeIdx), 1);
+            if (!recipe.ingredients.length) recipe.ingredients.push({ amount: '', unit: '', name: '' });
+            redrawIngredients();
+          }
+        });
+
+        stepsWrap.addEventListener('click', (e) => {
+          const rm = e.target.dataset.removeStep;
+          const up = e.target.dataset.stepUp;
+          const down = e.target.dataset.stepDown;
+          if (rm !== undefined) {
+            recipe.steps.splice(Number(rm), 1);
+            if (!recipe.steps.length) recipe.steps.push({ text: '', done: false });
+            redrawSteps();
+          }
+          if (up !== undefined) {
+            const i = Number(up);
+            [recipe.steps[i - 1], recipe.steps[i]] = [recipe.steps[i], recipe.steps[i - 1]];
+            redrawSteps();
+          }
+          if (down !== undefined) {
+            const i = Number(down);
+            [recipe.steps[i], recipe.steps[i + 1]] = [recipe.steps[i + 1], recipe.steps[i]];
+            redrawSteps();
+          }
+        });
+
+        el('addIngredientBtn').addEventListener('click', () => {
+          recipe.ingredients.push({ amount: '', unit: '', name: '' });
+          redrawIngredients();
+        });
+
+        el('addStepBtn').addEventListener('click', () => {
+          recipe.steps.push({ text: '', done: false });
+          redrawSteps();
+        });
+
+        form.elements.imageFile.addEventListener('change', async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+            toast('Only JPEG and PNG files are allowed.', 'error');
+            e.target.value = '';
+            return;
+          }
+          try {
+            recipe.imageDataUrl = await fileToCompressedDataUrl(file, file.type === 'image/png' ? 'image/png' : 'image/jpeg');
+            recipe.imageUrl = '';
+            const preview = el('formImagePreview');
+            preview.src = recipe.imageDataUrl;
+            preview.classList.remove('hidden');
+          } catch {
+            toast('Could not process image. Please try a smaller file.', 'error');
+          }
+        });
+
+        form.elements.imageUrl.addEventListener('input', (e) => {
+          recipe.imageUrl = e.target.value.trim();
+          if (recipe.imageUrl) recipe.imageDataUrl = '';
+          const preview = el('formImagePreview');
+          const src = getImage(recipe);
+          preview.src = src;
+          preview.classList.toggle('hidden', !src);
+        });
+
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const payload = {
+            ...recipe,
+            title: form.elements.title.value.trim(),
+            description: form.elements.description.value.trim(),
+            category: form.elements.category.value,
+            tags: parseTags(form.elements.tags.value),
+            servings: Math.max(1, Number(form.elements.servings.value || 1)),
+            prepMin: Math.max(0, Number(form.elements.prepMin.value || 0)),
+            cookMin: Math.max(0, Number(form.elements.cookMin.value || 0)),
+            totalMin: Math.max(0, Number(form.elements.prepMin.value || 0) + Number(form.elements.cookMin.value || 0)),
+            ingredients: recipe.ingredients.map(i => ({ amount: i.amount.trim(), unit: i.unit.trim(), name: i.name.trim() })).filter(i => i.name),
+            steps: recipe.steps.map(s => ({ text: s.text.trim(), done: false })).filter(s => s.text),
+            updatedAt: nowISO(),
+            createdAt: recipe.createdAt || nowISO(),
+          };
+
+          if (!payload.title) return toast('Title is required.', 'error');
+          if (!payload.ingredients.length) return toast('Add at least one ingredient.', 'error');
+          if (!payload.steps.length) return toast('Add at least one step.', 'error');
+
+          const idx = state.recipes.findIndex(r => r.id === payload.id);
+          if (idx >= 0) state.recipes[idx] = sanitizeRecipe(payload);
+          else state.recipes.unshift(sanitizeRecipe(payload));
+
+          state.selectedId = payload.id;
+          state.mode = 'detail';
+          save();
+          toast('Recipe saved.', 'success');
+          renderAll();
+        });
+
+        el('cancelFormBtn').addEventListener('click', () => {
+          state.mode = 'detail';
+          renderAll();
+        });
+
+        if (isEditing) {
+          el('deleteBtn').addEventListener('click', () => {
+            if (!confirm('Delete this recipe permanently?')) return;
+            state.recipes = state.recipes.filter(r => r.id !== recipe.id);
+            state.selectedId = state.recipes[0]?.id || null;
+            state.mode = 'detail';
+            save();
+            toast('Recipe deleted.', 'success');
+            renderAll();
+          });
+        }
+      }
+
+      function fileToCompressedDataUrl(file, outputType = 'image/jpeg') {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('Read failed'));
+          reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('Image invalid'));
+            img.onload = () => {
+              const MAX_W = 1200;
+              const scale = Math.min(1, MAX_W / img.width);
+              const w = Math.round(img.width * scale);
+              const h = Math.round(img.height * scale);
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              const quality = outputType === 'image/png' ? undefined : 0.82;
+              resolve(canvas.toDataURL(outputType, quality));
+            };
+            img.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function bindGlobalActions() {
+        el('newRecipeBtn').addEventListener('click', () => openForm());
+        el('exportBtn').addEventListener('click', exportRecipes);
+        el('importBtn').addEventListener('click', () => el('importFile').click());
+        el('importFile').addEventListener('change', importRecipes);
+        el('resetBtn').addEventListener('click', resetAll);
+
+        el('search').addEventListener('input', (e) => {
+          state.filters.search = e.target.value;
+          renderAll(false);
+        });
+        el('filterCategory').addEventListener('change', (e) => {
+          state.filters.category = e.target.value;
+          renderAll(false);
+        });
+        el('filterTags').addEventListener('change', (e) => {
+          state.filters.tags = Array.from(e.target.selectedOptions).map(o => o.value);
+          renderAll(false);
+        });
+        el('sortBy').addEventListener('change', (e) => {
+          state.filters.sort = e.target.value;
+          renderAll(false);
+        });
+        el('clearFiltersBtn').addEventListener('click', () => {
+          state.filters = { search: '', category: '', tags: [], sort: 'updated' };
+          el('search').value = '';
+          el('sortBy').value = 'updated';
+          renderAll(false);
+        });
+
+        recipeListEl.addEventListener('click', (e) => {
+          const btn = e.target.closest('[data-id]');
+          if (!btn) return;
+          state.selectedId = btn.dataset.id;
+          state.mode = 'detail';
+          renderAll(false);
+        });
+      }
+
+      function exportRecipes() {
+        const blob = new Blob([JSON.stringify(state.recipes, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `recipe-book-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Recipes exported.', 'success');
+      }
+
+      function validateRecipeArray(data) {
+        if (!Array.isArray(data)) throw new Error('JSON must be an array of recipes.');
+        data.forEach((r, i) => {
+          if (!r || typeof r !== 'object') throw new Error(`Recipe at index ${i} is invalid.`);
+          if (!('id' in r) || !('title' in r)) throw new Error(`Recipe at index ${i} is missing id/title.`);
+        });
+      }
+
+      async function importRecipes(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const json = JSON.parse(text);
+          validateRecipeArray(json);
+          const incoming = json.map(sanitizeRecipe).filter(r => r.title);
+          const byId = new Map(state.recipes.map(r => [r.id, r]));
+          incoming.forEach(r => byId.set(r.id, { ...(byId.get(r.id) || {}), ...r, updatedAt: nowISO() }));
+          state.recipes = Array.from(byId.values());
+          state.selectedId = state.selectedId || state.recipes[0]?.id || null;
+          save();
+          toast(`Imported ${incoming.length} recipe(s).`, 'success');
+          renderAll();
+        } catch (err) {
+          toast(`Import failed: ${err.message || 'Invalid JSON file.'}`, 'error');
+        } finally {
+          e.target.value = '';
+        }
+      }
+
+      function resetAll() {
+        if (!confirm('This removes all recipes from local storage. This cannot be undone. Continue?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state.recipes = defaultRecipes();
+        state.selectedId = state.recipes[0]?.id || null;
+        save();
+        toast('All data reset. Starter recipes restored.', 'success');
+        renderAll();
+      }
+
+      function renderAll(refreshFilters = true) {
+        if (refreshFilters) updateFilterLists();
+        renderRecipeList();
+        if (!state.recipes.length) return renderEmptyState();
+        if (!state.selectedId || !state.recipes.some(r => r.id === state.selectedId)) {
+          state.selectedId = filteredRecipes()[0]?.id || state.recipes[0]?.id || null;
+        }
+        if (state.mode === 'form') {
+          const recipe = state.recipes.find(r => r.id === state.selectedId);
+          return openForm(recipe?.id);
+        }
+        renderDetail();
+      }
+
+      load();
+      bindGlobalActions();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
