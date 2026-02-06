@@ -846,22 +846,258 @@
         toast('Settings saved.', 'success');
       }
 
+      const OFFLINE_SUBSTITUTIONS = {
+        eggs:[{name:'Flax egg',note:'1 egg = 1 tbsp ground flax + 3 tbsp water (rest 5 min).'},{name:'Chia egg',note:'1 egg = 1 tbsp chia + 3 tbsp water.'},{name:'Unsweetened applesauce',note:'1 egg = 1/4 cup in baking.'},{name:'Mashed banana',note:'1 egg = 1/4 cup; adds sweetness.'}],
+        butter:[{name:'Olive oil',note:'Use 3/4 amount of butter.'},{name:'Coconut oil',note:'1:1 for baking/sautéing.'},{name:'Vegan butter',note:'1:1 swap.'},{name:'Greek yogurt',note:'Use half amount in baking.'}],
+        milk:[{name:'Soy milk',note:'1:1 swap.'},{name:'Oat milk',note:'1:1 swap.'},{name:'Almond milk',note:'1:1 swap; lighter body.'},{name:'Water + cream',note:'For richness in sauces.'}],
+        'coconut milk':[{name:'Evaporated milk',note:'1:1 in savory recipes.'},{name:'Cashew cream',note:'Blend soaked cashews + water.'},{name:'Heavy cream + coconut extract',note:'Add small coconut note.'}],
+        cream:[{name:'Half-and-half',note:'1:1 with lighter texture.'},{name:'Greek yogurt',note:'Stir in at end to avoid curdling.'},{name:'Evaporated milk',note:'1:1 in soups/sauces.'},{name:'Cashew cream',note:'Vegan creamy option.'}],
+        yogurt:[{name:'Sour cream',note:'1:1 swap.'},{name:'Buttermilk',note:'Thinner; use slightly less.'},{name:'Coconut yogurt',note:'Dairy-free 1:1.'}],
+        'sour cream':[{name:'Greek yogurt',note:'1:1; tangy and lighter.'},{name:'Crème fraîche',note:'1:1 richer.'},{name:'Blended cottage cheese',note:'Use for dips/bakes.'}],
+        flour:[{name:'All-purpose GF blend',note:'1:1 in most baking.'},{name:'Almond flour',note:'Use ~1:1.25, denser result.'},{name:'Oat flour',note:'1:1 by weight; add binder.'},{name:'Rice flour',note:'Blend with starch for best texture.'}],
+        'all-purpose flour':[{name:'Gluten-free 1:1 flour',note:'Direct replacement.'},{name:'Cake flour',note:'Lighter crumb.'},{name:'Whole wheat flour',note:'Nutty flavor; may need extra liquid.'}],
+        breadcrumbs:[{name:'Crushed oats',note:'1:1 for binding/topping.'},{name:'Panko',note:'Lighter crunch.'},{name:'Crushed GF crackers',note:'Great GF option.'},{name:'Almond meal',note:'Low-carb coating.'}],
+        cornstarch:[{name:'Arrowroot',note:'1:1 thickener.'},{name:'Potato starch',note:'1:1 thickener.'},{name:'Tapioca starch',note:'Use slightly less.'},{name:'Flour',note:'Use ~2x amount.'}],
+        'soy sauce':[{'name':'Tamari',note:'1:1; often gluten-free.'},{name:'Coconut aminos',note:'1:1 slightly sweeter.'},{name:'Liquid aminos',note:'1:1 savory swap.'}],
+        'fish sauce':[{name:'Soy sauce + lime',note:'Salty + tangy replacement.'},{name:'Tamari + anchovy paste',note:'Closer umami profile.'},{name:'Miso + water',note:'Vegan umami alternative.'}],
+        worcestershire:[{name:'Soy sauce + vinegar + pinch sugar',note:'Balanced savory tang.'},{name:'A1 steak sauce',note:'Use slightly less.'},{name:'Balsamic + tamari',note:'Deep umami substitute.'}],
+        honey:[{name:'Maple syrup',note:'1:1 swap.'},{name:'Agave syrup',note:'Use slightly less (sweeter).'}, {name:'Brown rice syrup',note:'Less sweet, sticky.'}],
+        sugar:[{name:'Coconut sugar',note:'1:1 caramel note.'},{name:'Brown sugar',note:'1:1 with moisture.'},{name:'Maple syrup',note:'3/4 cup per 1 cup sugar; reduce liquid.'}],
+        'maple syrup':[{name:'Honey',note:'1:1 if not vegan.'},{name:'Agave',note:'1:1.'},{name:'Brown sugar syrup',note:'1 cup sugar + 1/4 cup water.'}],
+        'baking powder':[{name:'Cream of tartar + baking soda',note:'1 tsp = 1/4 tsp soda + 1/2 tsp cream of tartar.'},{name:'Self-rising flour',note:'Reduce added leavening/salt.'}],
+        'baking soda':[{name:'Baking powder',note:'Use ~3x amount.'},{name:'Potassium bicarbonate',note:'1:1 low-sodium option.'}],
+        yeast:[{name:'Baking powder',note:'For quick breads only, not yeast texture.'},{name:'Sourdough starter',note:'Use active starter and longer proof.'}],
+        salt:[{name:'Kosher salt',note:'Use a bit more by volume.'},{name:'Sea salt',note:'Use to taste.'},{name:'Low-sodium salt blend',note:'Reduce sodium.'}],
+        pepper:[{name:'White pepper',note:'Milder heat.'},{name:'Red pepper flakes',note:'Use less.'},{name:'Paprika',note:'Mild warmth + color.'}],
+        garlic:[{name:'Garlic powder',note:'1 clove = 1/4 tsp powder.'},{name:'Shallot',note:'Milder allium flavor.'},{name:'Asafoetida',note:'Pinch for onion-garlic style in vegan curries.'}],
+        onion:[{name:'Shallots',note:'Use 1:1 by weight.'},{name:'Leek',note:'Milder flavor.'},{name:'Onion powder',note:'1 tbsp fresh ≈ 1 tsp powder.'}],
+        shallot:[{name:'Red onion',note:'Use slightly less.'},{name:'Yellow onion',note:'1:1 by weight.'}],
+        scallion:[{name:'Chives',note:'Mild onion note.'},{name:'Leek greens',note:'Cook briefly.'}],
+        ginger:[{name:'Ground ginger',note:'1 tbsp fresh = 1/4 tsp ground.'},{name:'Galangal',note:'Sharper citrus-like.'}],
+        basil:[{name:'Oregano',note:'Use less; stronger.'},{name:'Parsley + mint',note:'Fresh herbaceous profile.'}],
+        oregano:[{name:'Marjoram',note:'Closest flavor.'},{name:'Italian seasoning',note:'Use slightly less.'}],
+        thyme:[{name:'Oregano',note:'Earthy replacement.'},{name:'Rosemary',note:'Use half amount.'}],
+        rosemary:[{name:'Thyme',note:'Use slightly more.'},{name:'Sage',note:'Use less due intensity.'}],
+        parsley:[{name:'Cilantro',note:'Brighter flavor.'},{name:'Celery leaves',note:'Fresh herb substitute.'}],
+        cilantro:[{name:'Parsley + lime zest',note:'Fresh and citrusy.'},{name:'Basil',note:'Different but pleasant.'}],
+        dill:[{name:'Fennel fronds',note:'Similar fresh note.'},{name:'Tarragon',note:'Use less.'}],
+        cumin:[{name:'Ground coriander',note:'Milder citrus warmth.'},{name:'Caraway seeds',note:'Use less.'}],
+        coriander:[{name:'Cumin',note:'Earthier.'},{name:'Caraway',note:'Use less.'}],
+        paprika:[{name:'Smoked paprika',note:'Adds smokiness.'},{name:'Cayenne + sweet pepper',note:'Adjust heat.'}],
+        turmeric:[{name:'Saffron',note:'Color/aroma; expensive.'},{name:'Curry powder',note:'Use slightly less.'}],
+        cinnamon:[{name:'Nutmeg',note:'Use half amount.'},{name:'Allspice',note:'Use half amount.'}],
+        nutmeg:[{name:'Mace',note:'Very similar flavor.'},{name:'Cinnamon',note:'Use slightly more.'}],
+        cloves:[{name:'Allspice',note:'Use equal or less.'},{name:'Nutmeg + cinnamon',note:'Blend small amounts.'}],
+        cardamom:[{name:'Cinnamon + ginger',note:'Warm aromatic blend.'},{name:'Nutmeg',note:'Use little.'}],
+        saffron:[{name:'Turmeric + paprika',note:'Color-focused replacement.'},{name:'Annatto',note:'Color and mild flavor.'}],
+        vanilla:[{name:'Maple syrup',note:'Adds sweetness + aroma.'},{name:'Almond extract',note:'Use half amount.'}],
+        cocoa:[{name:'Unsweetened chocolate',note:'3 tbsp cocoa = 1 oz chocolate minus fat.'},{name:'Carob powder',note:'1:1 caffeine-free.'}],
+        chocolate:[{name:'Cocoa powder + butter',note:'DIY baking chocolate.'},{name:'Carob chips',note:'Different flavor but works.'}],
+        rice:[{name:'Quinoa',note:'Higher protein swap.'},{name:'Cauliflower rice',note:'Lower-carb option.'},{name:'Couscous',note:'Quick-cook alternative.'}],
+        pasta:[{name:'GF pasta',note:'1:1 for gluten-free.'},{name:'Zucchini noodles',note:'Low-carb.'},{name:'Shirataki noodles',note:'Very low calorie.'}],
+        bread:[{name:'GF bread',note:'1:1 sandwich use.'},{name:'Lettuce wraps',note:'Low-carb alternative.'},{name:'Pita',note:'Different texture.'}],
+        potato:[{name:'Sweet potato',note:'Sweeter, nutrient-rich.'},{name:'Cauliflower',note:'Lower-carb mash/roast.'}],
+        tomato:[{name:'Canned tomatoes',note:'1:1 cooked dishes.'},{name:'Tomato paste + water',note:'2 tbsp paste + 3/4 cup water.'}],
+        'tomato paste':[{'name':'Tomato sauce reduced',note:'Simmer to thicken.'},{name:'Ketchup',note:'In small savory amounts.'}],
+        'tomato sauce':[{name:'Crushed tomatoes',note:'Blend if needed.'},{name:'Passata',note:'Smooth and rich.'}],
+        mayonnaise:[{name:'Greek yogurt',note:'Lighter 1:1.'},{name:'Mashed avocado',note:'Creamy healthy fat.'},{name:'Vegan mayo',note:'Egg-free 1:1.'}],
+        mustard:[{name:'Dijon mustard',note:'Smooth sharper flavor.'},{name:'Prepared horseradish',note:'Use less; pungent.'}],
+        ketchup:[{name:'Tomato paste + vinegar + sweetener',note:'DIY ketchup profile.'},{name:'BBQ sauce',note:'Sweeter smoky swap.'}],
+        vinegar:[{name:'Lemon juice',note:'1:1 acidity.'},{name:'Lime juice',note:'1:1 acidity.'},{name:'Apple cider vinegar',note:'For most recipes.'}],
+        'apple cider vinegar':[{name:'White wine vinegar',note:'1:1.'},{name:'Lemon juice',note:'1:1 bright acidity.'}],
+        'white wine vinegar':[{name:'Rice vinegar',note:'Milder acidity.'},{name:'Apple cider vinegar',note:'Fruity tang.'}],
+        'red wine vinegar':[{name:'Balsamic vinegar',note:'Sweeter; use less.'},{name:'Apple cider vinegar',note:'1:1.'}],
+        lemon:[{name:'Lime',note:'1:1 citrus acidity.'},{name:'Vinegar',note:'Small amount for acidity.'}],
+        lime:[{name:'Lemon',note:'1:1 swap.'},{name:'Rice vinegar',note:'Milder acid.'}],
+        'olive oil':[{name:'Avocado oil',note:'1:1 high heat.'},{name:'Canola oil',note:'Neutral 1:1.'},{name:'Melted butter',note:'If dairy allowed.'}],
+        'vegetable oil':[{name:'Canola oil',note:'1:1 neutral.'},{name:'Coconut oil',note:'1:1 baking.'},{name:'Olive oil',note:'1:1 savory.'}],
+        sesame:[{name:'Sunflower seeds',note:'Nut-free crunch.'},{name:'Tahini',note:'Sesame paste for sauces.'}],
+        tahini:[{name:'Peanut butter',note:'Different but nutty.'},{name:'Sunflower seed butter',note:'Nut-free creamy option.'}],
+        peanuts:[{name:'Cashews',note:'Similar richness.'},{name:'Sunflower seeds',note:'Nut-free crunch.'}],
+        almonds:[{name:'Cashews',note:'Creamy swap.'},{name:'Sunflower seeds',note:'Nut-free option.'}],
+        cashews:[{name:'Blanched almonds',note:'Creamy when blended.'},{name:'Sunflower seeds',note:'Budget-friendly.'}],
+        walnuts:[{name:'Pecans',note:'Similar texture.'},{name:'Almonds',note:'Crunchy alternative.'}],
+        pecans:[{name:'Walnuts',note:'1:1 baking swap.'},{name:'Hazelnuts',note:'Richer flavor.'}],
+        spinach:[{name:'Kale',note:'Cook a bit longer.'},{name:'Swiss chard',note:'Similar leafy green.'}],
+        kale:[{name:'Spinach',note:'Cooks faster.'},{name:'Collard greens',note:'Cook longer.'}],
+        zucchini:[{name:'Yellow squash',note:'1:1 swap.'},{name:'Eggplant',note:'Heartier texture.'}],
+        mushrooms:[{name:'Eggplant',note:'Meaty texture.'},{name:'Tofu',note:'Protein-rich option.'}],
+        chicken:[{name:'Turkey',note:'Lean poultry swap.'},{name:'Tofu',note:'Vegan protein.'},{name:'Chickpeas',note:'Vegan hearty option.'}],
+        beef:[{name:'Turkey mince',note:'Lean replacement.'},{name:'Lentils + mushrooms',note:'Vegan umami combo.'}],
+        pork:[{name:'Chicken thigh',note:'Similar richness.'},{name:'Jackfruit',note:'Pulled texture for vegan.'}],
+        shrimp:[{name:'Firm tofu',note:'Absorbs sauces well.'},{name:'White fish',note:'Mild seafood alternative.'}],
+        tuna:[{name:'Salmon',note:'Richer fish flavor.'},{name:'Mashed chickpeas',note:'Vegan salad-style replacement.'}],
+        salmon:[{name:'Trout',note:'Similar fatty fish.'},{name:'Mackerel',note:'Richer option.'}],
+        parmesan:[{name:'Pecorino',note:'Salty hard cheese.'},{name:'Nutritional yeast',note:'Vegan cheesy flavor.'}],
+        mozzarella:[{name:'Provolone',note:'Melt-friendly cheese.'},{name:'Vegan mozzarella',note:'Dairy-free option.'}],
+        cheddar:[{name:'Colby',note:'Similar melt.'},{name:'Vegan cheddar',note:'Dairy-free.'}],
+        feta:[{name:'Goat cheese',note:'Tangy crumbly style.'},{name:'Tofu feta',note:'Vegan briny option.'}],
+        'cream cheese':[{name:'Mascarpone',note:'Richer texture.'},{name:'Greek yogurt + soft cheese',note:'Lighter spread.'},{name:'Vegan cream cheese',note:'Dairy-free.'}],
+        buttermilk:[{name:'Milk + lemon juice',note:'1 cup milk + 1 tbsp acid.'},{name:'Yogurt + water',note:'Thin to buttermilk consistency.'}],
+        'heavy cream':[{name:'Half-and-half',note:'Lighter dairy option.'},{name:'Evaporated milk',note:'Lower fat in sauces.'},{name:'Coconut cream',note:'Dairy-free rich option.'}],
+        broth:[{name:'Stock cube + water',note:'Quick substitute.'},{name:'Miso + water',note:'Umami vegetarian option.'}],
+        'vegetable broth':[{name:'Water + bouillon',note:'Easy pantry swap.'},{name:'Miso water',note:'Umami depth.'}],
+        'chicken broth':[{name:'Vegetable broth',note:'Vegetarian alternative.'},{name:'Water + soy + herbs',note:'Emergency swap.'}],
+        beans:[{name:'Lentils',note:'Similar protein/fiber.'},{name:'Chickpeas',note:'Hearty texture.'}],
+        chickpeas:[{name:'Cannellini beans',note:'Creamy texture.'},{name:'Lentils',note:'Faster-cooking option.'}],
+        lentils:[{name:'Split peas',note:'Earthy pulse substitute.'},{name:'Beans',note:'Hearty replacement.'}],
+      };
+
+      function normalizeIngredientName(name) {
+        return String(name || '').toLowerCase().replace(/[^a-z\s-]/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+
+      function detectOfflineIntent(question) {
+        const q = question.toLowerCase();
+        if (/\bvegan\b/.test(q)) return 'vegan';
+        if (/gluten[-\s]?free|\bgf\b/.test(q)) return 'glutenfree';
+        if (/reduce calories|lower calories|lighter|low[-\s]?cal/.test(q)) return 'calorie';
+        if (/under\s*30|quick|faster|speed/.test(q)) return 'under30';
+        if (/substitute|replace|instead of|swap|no\s+\w+|without\s+\w+/.test(q)) return 'substitute';
+        return 'general';
+      }
+
+      function extractTargetIngredient(question) {
+        const q = normalizeIngredientName(question);
+        const keys = Object.keys(OFFLINE_SUBSTITUTIONS).sort((a,b)=>b.length-a.length);
+        for (const key of keys) {
+          if (q.includes(normalizeIngredientName(key))) return key;
+        }
+        const m = q.match(/no\s+([a-z\s]+)/) || q.match(/without\s+([a-z\s]+)/) || q.match(/instead of\s+([a-z\s]+)/);
+        if (m) {
+          const guess = m[1].trim();
+          for (const key of keys) {
+            if (key.includes(guess) || guess.includes(key)) return key;
+          }
+        }
+        return '';
+      }
+
+      function listSubstitutes(key) {
+        const list = OFFLINE_SUBSTITUTIONS[key] || [];
+        if (!list.length) return '';
+        return list.map((item, i) => `${i + 1}. ${item.name} — ${item.note}`).join('\n');
+      }
+
+      function contextHints(recipe) {
+        if (!recipe) return '';
+        const tags = recipe.tags || [];
+        const hints = [];
+        if (tags.includes('vegan')) hints.push('Recipe context: already vegan, keep all suggestions plant-based.');
+        if (tags.includes('dessert') || tags.includes('sweet') || recipe.category.toLowerCase() === 'dessert') hints.push('Recipe context: dessert; preserve sweetness and structure.');
+        if (recipe.category.toLowerCase().includes('soup') || recipe.tags.includes('curry')) hints.push('Recipe context: soup/curry; preserve liquid balance and simmering texture.');
+        if (tags.includes('lowcarb')) hints.push('Recipe context: low-carb preference.');
+        return hints.join('\n');
+      }
+
+      function makeHeuristicPatch(intent, recipe, target) {
+        if (!recipe) return null;
+        const copy = structuredClone(recipe);
+        let changed = false;
+        const replaceByRules = (rules) => {
+          copy.ingredients = copy.ingredients.map(ing => {
+            const name = normalizeIngredientName(ing.name);
+            for (const [needle, replacement] of rules) {
+              if (name.includes(needle)) {
+                changed = true;
+                return { ...ing, name: replacement };
+              }
+            }
+            return ing;
+          });
+        };
+
+        if (intent === 'vegan') {
+          replaceByRules([
+            ['chicken','tofu'],['beef','lentils + mushrooms'],['pork','jackfruit'],['fish','tofu'],['shrimp','tofu'],['egg','flax egg'],['milk','oat milk'],['butter','olive oil'],['yogurt','coconut yogurt'],['cream','cashew cream'],['cheese','vegan cheese'],['honey','maple syrup']
+          ]);
+          copy.steps = copy.steps.map(step => ({...step, text: step.text.replace(/butter/gi,'olive oil').replace(/milk/gi,'oat milk').replace(/cream/gi,'cashew cream').replace(/cheese/gi,'vegan cheese').replace(/honey/gi,'maple syrup')}));
+        } else if (intent === 'glutenfree') {
+          replaceByRules([
+            ['flour','gluten-free flour blend'],['soy sauce','tamari (gluten-free)'],['breadcrumbs','GF breadcrumbs'],['pasta','gluten-free pasta'],['bread','gluten-free bread']
+          ]);
+        } else if (intent === 'calorie') {
+          replaceByRules([
+            ['heavy cream','greek yogurt'],['cream','light yogurt'],['butter','olive oil (use less)'],['mayonnaise','greek yogurt'],['sugar','reduced sugar or sweetener']
+          ]);
+        } else if (intent === 'substitute' && target) {
+          const replacement = OFFLINE_SUBSTITUTIONS[target]?.[0];
+          if (replacement) {
+            const key = normalizeIngredientName(target);
+            copy.ingredients = copy.ingredients.map(ing => {
+              if (normalizeIngredientName(ing.name).includes(key)) {
+                changed = true;
+                return { ...ing, name: replacement.name };
+              }
+              return ing;
+            });
+          }
+        }
+
+        if (!changed) return null;
+        copy.updatedAt = now();
+        return { ingredients: copy.ingredients, steps: copy.steps, updatedAt: copy.updatedAt };
+      }
+
+      function offlineAssistant(question, recipe, includeContext, reason = '') {
+        const intent = detectOfflineIntent(question);
+        const target = extractTargetIngredient(question);
+        const ctx = includeContext ? contextHints(recipe) : '';
+        let answer = 'Offline suggestion:\n';
+        let patch = null;
+
+        if (intent === 'substitute' && target) {
+          const subs = listSubstitutes(target);
+          if (subs) answer += `You can replace ${target} with:\n${subs}`;
+          else answer += 'I could not find that exact ingredient, but try matching texture, fat content, and acidity from similar pantry items.';
+          patch = makeHeuristicPatch(intent, recipe, target);
+        } else if (intent === 'vegan') {
+          answer += 'To make this vegan, swap animal ingredients with plant alternatives:\n- Meat/fish → tofu, tempeh, lentils, mushrooms\n- Egg → flax or chia egg\n- Milk/cream → oat milk or cashew cream\n- Butter → olive oil or vegan butter\n- Cheese → vegan cheese or nutritional yeast\n- Honey → maple syrup';
+          patch = makeHeuristicPatch(intent, recipe, target);
+        } else if (intent === 'glutenfree') {
+          answer += 'To make this gluten-free:\n- Wheat flour → gluten-free 1:1 flour blend\n- Soy sauce → tamari/coconut aminos\n- Breadcrumbs → GF breadcrumbs or crushed rice cereal\n- Pasta/bread → GF versions\n- Check labels for hidden gluten in sauces.';
+          patch = makeHeuristicPatch(intent, recipe, target);
+        } else if (intent === 'calorie') {
+          answer += 'To reduce calories:\n- Replace cream with light yogurt/cashew cream\n- Use less oil (measure instead of free-pour)\n- Increase non-starchy vegetables\n- Lean proteins (chicken breast, fish, tofu)\n- Reduce sugar by 15–30% in many desserts.';
+          patch = makeHeuristicPatch(intent, recipe, target);
+        } else if (intent === 'under30') {
+          answer += 'To finish under 30 minutes:\n- Use pre-cut vegetables and quick-cook proteins\n- Choose canned beans and microwave rice\n- Preheat pans/oven early\n- Cook components in parallel\n- Reduce simmering by using smaller cuts.';
+        } else {
+          if (target && OFFLINE_SUBSTITUTIONS[target]) answer += `For ${target}, try:\n${listSubstitutes(target)}`;
+          else answer += 'Try balancing flavor with these rules: add acid (lemon/vinegar), salt in small increments, and texture contrast (crunch + creamy). I can also help with vegan, gluten-free, lower-calorie, or under-30-minute adjustments.';
+        }
+
+        if (ctx) answer += `\n\n${ctx}`;
+        if (reason) answer += `\n\n(Using offline mode because: ${reason})`;
+        return { answer, patch };
+      }
+
+      function renderOfflineSuggestion(result) {
+        state.aiPatch = result.patch && typeof result.patch === 'object' ? result.patch : null;
+        $('applyPatchBtn').disabled = !state.aiPatch;
+        $('aiResponse').textContent = result.answer + (state.aiPatch ? '\n\n(You can apply this offline patch to the recipe.)' : '');
+      }
+
       function openAIModal() {
         state.aiPatch = null;
         $('applyPatchBtn').disabled = true;
         $('aiPrompt').value = '';
-        $('aiResponse').textContent = state.settings.apiKey ? 'No response yet.' : 'No API key set yet. Open Settings (⚙️) and add your OpenAI API key to use the AI Assistant.';
+        $('aiResponse').textContent = state.settings.apiKey ? 'No response yet.' : 'No API key set. Offline mode is available — ask your cooking question and you will get an Offline suggestion.';
         openModal('aiModal');
       }
 
       async function askAI() {
         const prompt = $('aiPrompt').value.trim();
         if (!prompt) return toast('Please type a question.', 'error');
-        if (!navigator.onLine) return toast('You appear offline.', 'error');
-        if (!state.settings.apiKey) return toast('Add your OpenAI API key in Settings first.', 'error');
 
         const recipe = state.recipes.find(r => r.id === state.selectedId);
         const include = $('includeRecipeCtx').checked && recipe;
+
+        if (!state.settings.apiKey || !navigator.onLine) {
+          const reason = !state.settings.apiKey ? 'no API key set' : 'offline network';
+          renderOfflineSuggestion(offlineAssistant(prompt, recipe, include, reason));
+          return;
+        }
 
         const sys = 'You are a practical cooking assistant. Return strict JSON with keys: answer (string), patch (object|null). Patch may include title, description, tags, servings, prepMin, cookMin, nutrition, ingredients, steps.';
         const userPayload = {
@@ -889,10 +1125,7 @@
             }),
           });
 
-          if (!res.ok) {
-            const errTxt = await res.text();
-            throw new Error(`API error ${res.status}: ${errTxt.slice(0, 180)}`);
-          }
+          if (!res.ok) throw new Error(`OpenAI request failed (${res.status})`);
 
           const data = await res.json();
           const content = data.choices?.[0]?.message?.content;
@@ -903,8 +1136,8 @@
           $('applyPatchBtn').disabled = !state.aiPatch;
           $('aiResponse').textContent = answer + (state.aiPatch ? '\n\n(A patch is ready to apply.)' : '');
         } catch (err) {
-          $('aiResponse').textContent = 'Failed to get AI response.';
-          toast(String(err.message || err), 'error');
+          renderOfflineSuggestion(offlineAssistant(prompt, recipe, include, err.message || 'OpenAI unavailable'));
+          toast('OpenAI unavailable. Using offline assistant.', 'error');
         }
       }
 
