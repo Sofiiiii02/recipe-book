@@ -114,7 +114,7 @@
           <button class="btn" id="exportBtn">Export</button>
           <button class="btn" id="importBtn">Import</button>
           <button class="btn" id="shopBtn">Shopping List</button>
-          <button class="btn" id="settingsBtn">Settings</button>
+          <button class="btn" id="settingsBtn" aria-label="Settings">⚙️ Settings</button>
           <button class="btn danger" id="resetBtn">Reset</button>
         </div>
       </div>
@@ -165,9 +165,11 @@
         <button class="btn" data-close="settingsModal">Close</button>
       </div>
       <div class="field"><label>OpenAI API Key</label><input id="apiKeyInput" type="password" placeholder="sk-..." /></div>
-      <div class="field"><label>Model</label><input id="modelInput" type="text" placeholder="gpt-4o-mini" /></div>
       <p class="muted">Your key is stored only in your browser localStorage.</p>
-      <button class="btn primary" id="saveSettingsBtn">Save settings</button>
+      <div class="row">
+        <button class="btn primary" id="saveSettingsBtn">Save key</button>
+        <button class="btn danger" id="clearSettingsBtn">Clear key</button>
+      </div>
     </div>
   </div>
 
@@ -205,8 +207,7 @@
   <script>
     (() => {
       const STORAGE = 'recipeBook.v2';
-      const SETTINGS = 'recipeBook.settings.v1';
-      const CATEGORIES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Soup', 'Salad', 'Drink', 'Main', 'Side', 'Other'];
+            const CATEGORIES = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Dessert', 'Soup', 'Salad', 'Drink', 'Main', 'Side', 'Other'];
       const IMAGE_TYPES = ['image/jpeg', 'image/png'];
 
       const state = {
@@ -220,7 +221,7 @@
           sort: 'updated',
           preset: { dinner: false, lowcarb: false, under30: false, vegan: false, vegetarian: false, dessert: false },
         },
-        settings: { apiKey: '', model: 'gpt-4o-mini' },
+        settings: { apiKey: '' },
         wakeLock: null,
         aiPatch: null,
         shoppingSelected: new Set(),
@@ -320,13 +321,10 @@
         }
       }
 
-      function saveSettings() { localStorage.setItem(SETTINGS, JSON.stringify(state.settings)); }
+      function saveSettings() { localStorage.setItem('openai_api_key', state.settings.apiKey || ''); }
 
       function load() {
-        const settingsRaw = localStorage.getItem(SETTINGS);
-        if (settingsRaw) {
-          try { state.settings = { ...state.settings, ...JSON.parse(settingsRaw) }; } catch {}
-        }
+        state.settings.apiKey = localStorage.getItem('openai_api_key') || '';
         const raw = localStorage.getItem(STORAGE);
         if (!raw) {
           state.recipes = sampleRecipes();
@@ -839,13 +837,11 @@
 
       function openSettings() {
         $('apiKeyInput').value = state.settings.apiKey;
-        $('modelInput').value = state.settings.model || 'gpt-4o-mini';
         openModal('settingsModal');
       }
 
       function saveSettingsAction() {
         state.settings.apiKey = $('apiKeyInput').value.trim();
-        state.settings.model = $('modelInput').value.trim() || 'gpt-4o-mini';
         saveSettings();
         toast('Settings saved.', 'success');
       }
@@ -853,8 +849,8 @@
       function openAIModal() {
         state.aiPatch = null;
         $('applyPatchBtn').disabled = true;
-        $('aiResponse').textContent = 'No response yet.';
         $('aiPrompt').value = '';
+        $('aiResponse').textContent = state.settings.apiKey ? 'No response yet.' : 'No API key set yet. Open Settings (⚙️) and add your OpenAI API key to use the AI Assistant.';
         openModal('aiModal');
       }
 
@@ -883,7 +879,7 @@
               'Authorization': `Bearer ${state.settings.apiKey}`,
             },
             body: JSON.stringify({
-              model: state.settings.model || 'gpt-4o-mini',
+              model: 'gpt-4o-mini',
               temperature: 0.4,
               response_format: { type: 'json_object' },
               messages: [
@@ -972,6 +968,12 @@
         $('resetBtn').addEventListener('click', resetAll);
         $('settingsBtn').addEventListener('click', openSettings);
         $('saveSettingsBtn').addEventListener('click', saveSettingsAction);
+        $('clearSettingsBtn').addEventListener('click', () => {
+          state.settings.apiKey = '';
+          localStorage.removeItem('openai_api_key');
+          $('apiKeyInput').value = '';
+          toast('API key cleared.', 'success');
+        });
         $('shopBtn').addEventListener('click', openShopping);
         $('askAiBtn').addEventListener('click', askAI);
         $('applyPatchBtn').addEventListener('click', applyAIPatch);
