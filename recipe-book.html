@@ -236,7 +236,7 @@
           <option value="quick">Quickest first</option>
         </select>
         <select id="favoritesFilter">
-        <option value="all">All recipes</option>
+          <option value="all">All recipes</option>
           <option value="fav">Favorites only</option>
         </select>
       </div>
@@ -252,7 +252,7 @@
 
   <div class="modal-bg hidden" id="settingsModal">
     <div class="modal">
-    <div class="row" style="justify-content:space-between;align-items:center;">
+      <div class="row" style="justify-content:space-between;align-items:center;">
         <h2 style="margin:0;">Settings</h2>
         <button class="btn" data-close="settingsModal">Close</button>
       </div>
@@ -642,8 +642,23 @@
       function closeModal(id) { $(id).classList.add('hidden'); }
 
       function bindModalClose() {
-        document.querySelectorAll('[data-close]').forEach(btn => {
-          btn.addEventListener('click', () => closeModal(btn.dataset.close));
+        document.addEventListener('click', (e) => {
+          const closeBtn = e.target.closest('[data-close]');
+          if (closeBtn) {
+            closeModal(closeBtn.dataset.close);
+            return;
+          }
+
+          const backdrop = e.target.classList?.contains('modal-bg') ? e.target : null;
+          if (backdrop && !backdrop.classList.contains('hidden')) {
+            closeModal(backdrop.id);
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key !== 'Escape') return;
+          const openModal = document.querySelector('.modal-bg:not(.hidden)');
+          if (openModal) closeModal(openModal.id);
         });
       }
 
