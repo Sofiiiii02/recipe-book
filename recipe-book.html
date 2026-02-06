@@ -1,0 +1,1156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Harvest Table – Your Personal Recipe Collection</title>
+  <style>
+    :root {
+      --bg: #faf5ee;
+      --surface: #fffdf9;
+      --card: #fffaf4;
+      --text: #2d2a26;
+      --muted: #6f6961;
+      --sage: #5f7f67;
+      --sage-soft: #e6efe7;
+      --beige: #f3e4d4;
+      --lav: #ece4f8;
+      --rose: #f4dfe5;
+      --accent: #c96b5d;
+      --border: #e8ddd0;
+      --shadow: 0 10px 28px rgba(62, 45, 33, 0.09);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 3px solid #9fb7a3; outline-offset: 2px; border-radius: 10px; }
+
+    .app { max-width: 1320px; margin: 0 auto; padding: 1rem 1rem 2rem; }
+
+    .topbar {
+      position: sticky;
+      top: .5rem;
+      z-index: 20;
+      background: color-mix(in srgb, var(--surface) 85%, transparent);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: .55rem .8rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }
+
+    .row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+    .brand { display: flex; gap: .6rem; align-items: center; color: var(--sage); font-weight: 800; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: linear-gradient(140deg, #7ea88a, #c96b5d); }
+
+    .menu { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: #fff;
+      padding: .5rem .85rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.sage { background: var(--sage); color: #fff; }
+    .btn.soft { background: var(--sage-soft); border-color: #d8e5da; }
+    .btn.rose { background: var(--rose); border-color: #e9ccd4; }
+    .btn.icon { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; }
+    .btn.danger { background: #fde8e8; border-color: #f7caca; color: #9f2525; }
+
+    .dropdown { position: relative; }
+    .dropdown-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      min-width: 220px;
+      box-shadow: var(--shadow);
+      padding: .35rem;
+      display: none;
+      z-index: 50;
+    }
+    .dropdown.open .dropdown-panel { display: grid; gap: .2rem; }
+    .dropdown-panel button { border: 0; background: transparent; text-align: left; padding: .42rem .55rem; border-radius: 8px; cursor: pointer; }
+    .dropdown-panel button:hover { background: var(--sage-soft); }
+
+    .hero {
+      background: linear-gradient(130deg, #f7efe3 0%, #eef6f0 50%, #f4edf9 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .hero h1 { margin: 0; font-size: clamp(1.35rem, 1rem + 1.2vw, 2.2rem); }
+    .hero .subtitle { margin: .45rem 0 0; font-size: 1rem; color: #4b4f4a; }
+    .hero .note { margin: .35rem 0 0; color: var(--muted); }
+
+    .filters {
+      margin-top: .95rem;
+      display: grid;
+      grid-template-columns: 1.5fr repeat(4, minmax(120px, 1fr));
+      gap: .6rem;
+    }
+    .filters input, .filters select {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      padding: .58rem .65rem;
+      width: 100%;
+    }
+
+    .recipes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .recipe-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .recipe-card:hover { transform: translateY(-2px); }
+    .recipe-image { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+    .recipe-body { padding: .8rem; display: grid; gap: .42rem; }
+    .recipe-title { margin: 0; font-size: 1.02rem; }
+    .meta { color: var(--muted); font-size: .84rem; display: flex; flex-wrap: wrap; gap: .35rem; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: .32rem; }
+    .chip { font-size: .75rem; border-radius: 999px; padding: .18rem .56rem; background: var(--lav); color: #4b3f6a; }
+
+    .empty {
+      border: 1px dashed #d4c7b7;
+      border-radius: 14px;
+      padding: 1.2rem;
+      text-align: center;
+      color: var(--muted);
+      background: #fff;
+      grid-column: 1 / -1;
+    }
+
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(39, 30, 24, .5);
+      padding: 1rem;
+      display: grid;
+      place-items: center;
+      z-index: 80;
+    }
+    .modal {
+      width: min(980px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      padding: 1rem;
+    }
+    .hidden { display: none !important; }
+
+    .detail-layout {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: 1.05fr .95fr;
+      align-items: start;
+    }
+    .detail-image { width: 100%; border-radius: 14px; aspect-ratio: 5/4; object-fit: cover; border: 1px solid var(--border); }
+    .detail-content { display: grid; gap: .8rem; }
+    .section { border: 1px solid var(--border); background: var(--surface); border-radius: 12px; padding: .75rem; }
+
+    .nutrition { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .45rem; }
+    .nutri { border: 1px solid var(--border); border-radius: 10px; padding: .5rem; font-size: .84rem; background: #fff; }
+
+    .list { margin: 0; padding-left: 1.1rem; }
+    .list li { margin-bottom: .5rem; line-height: 1.45; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+    .field { display: grid; gap: .24rem; margin-bottom: .5rem; }
+    .field label { font-size: .82rem; color: var(--muted); font-weight: 650; }
+    .field input, .field select, .field textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 10px; background: #fff; padding: .55rem .6rem;
+    }
+
+    .ing-row, .step-row { display: grid; gap: .45rem; margin-bottom: .45rem; align-items: start; }
+    .ing-row { grid-template-columns: 1fr 1fr 2fr auto; }
+    .step-row { grid-template-columns: 1fr auto; }
+
+    .toast-wrap { position: fixed; right: 1rem; bottom: 1rem; z-index: 120; display: grid; gap: .4rem; }
+    .toast { background: #1f2937; color: #fff; border-radius: 10px; padding: .7rem .85rem; box-shadow: var(--shadow); }
+    .toast.success { background: #2f855a; }
+    .toast.error { background: #b83232; }
+
+    @media (max-width: 980px) {
+      .filters { grid-template-columns: 1fr 1fr; }
+      .detail-layout { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="row">
+        <div class="brand">
+          <div class="brand-mark">🍲</div>
+          <span>Harvest Table</span>
+        </div>
+        <div class="menu">
+          <div class="dropdown" id="categoryDropdown">
+            <button class="btn soft" id="allRecipesBtn">All Recipes ▾</button>
+            <div class="dropdown-panel" id="allRecipesPanel"></div>
+          </div>
+          <button class="btn icon soft" id="searchFocusBtn" aria-label="Focus search">🔍</button>
+          <button class="btn soft" id="settingsBtn">⚙️ Settings</button>
+          <button class="btn sage" id="newRecipeBtn">+ New Recipe</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Harvest Table – Your Personal Recipe Collection</h1>
+      <p class="subtitle">Collect your own and your family’s favorite recipes for every occasion.</p>
+      <p class="note">A private space to save, cook, and share the meals you love most.</p>
+      <div class="filters">
+        <input id="searchInput" placeholder="Search by title, ingredients, tags..." />
+        <select id="categoryFilter"></select>
+        <select id="tagFilter"></select>
+        <select id="sortBy">
+          <option value="updated">Last updated</option>
+          <option value="az">A–Z</option>
+          <option value="fav">Favorites first</option>
+          <option value="quick">Quickest first</option>
+        </select>
+        <select id="favoritesFilter">
+          <option value="all">All recipes</option>
+          <option value="fav">Favorites only</option>
+        </select>
+      </div>
+      <div class="menu" style="margin-top:.8rem;">
+        <button class="btn rose" id="shoppingBtn">Shopping List</button>
+      </div>
+    </section>
+
+    <section class="recipes-grid" id="recipesGrid"></section>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <div class="modal-bg hidden" id="settingsModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">Settings</h2>
+        <button class="btn" data-close="settingsModal">Close</button>
+      </div>
+      <div class="field" style="margin-top:.8rem;">
+        <label>OpenAI API key</label>
+        <input id="apiKeyInput" type="password" placeholder="sk-..." />
+      </div>
+      <div class="menu">
+        <button class="btn sage" id="saveApiKeyBtn">Save key</button>
+        <button class="btn" id="clearApiKeyBtn">Clear key</button>
+      </div>
+      <hr style="border:0;border-top:1px solid var(--border);margin:1rem 0;" />
+      <div class="menu">
+        <button class="btn soft" id="exportBtn">Export recipes</button>
+        <button class="btn soft" id="importBtn">Import recipes</button>
+        <button class="btn danger" id="resetBtn">Reset all data</button>
+      </div>
+      <input id="importFile" type="file" accept="application/json" class="hidden" />
+      <p class="meta" style="margin-top:.6rem;">All data stays in your browser (localStorage).</p>
+    </div>
+  </div>
+
+  <div class="modal-bg hidden" id="recipeModal">
+    <div class="modal" id="recipeModalContent"></div>
+  </div>
+
+  <div class="modal-bg hidden" id="aiModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">AI Cooking Assistant</h2>
+        <button class="btn" data-close="aiModal">Close</button>
+      </div>
+      <div class="field" style="margin-top:.7rem;">
+        <label>Your question</label>
+        <textarea id="aiPrompt" rows="4" placeholder="Make this recipe vegan and under 30 minutes"></textarea>
+      </div>
+      <label class="meta" style="display:flex;align-items:center;gap:.4rem;"><input type="checkbox" id="includeContext" checked /> Include current recipe context</label>
+      <div class="menu" style="margin-top:.6rem;">
+        <button class="btn sage" id="askAiBtn">Ask Assistant</button>
+        <button class="btn" id="applyAiPatchBtn" disabled>Apply suggestion</button>
+      </div>
+      <pre id="aiResponse" style="white-space:pre-wrap;background:#f8f4ee;border:1px solid var(--border);padding:.8rem;border-radius:12px;margin-top:.7rem;">No response yet.</pre>
+    </div>
+  </div>
+
+  <div class="modal-bg hidden" id="shoppingModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <h2 style="margin:0;">Shopping List</h2>
+        <button class="btn" data-close="shoppingModal">Close</button>
+      </div>
+      <p class="meta">Select recipes to build one merged ingredient list.</p>
+      <div id="shoppingChoices"></div>
+      <div id="shoppingOutput" class="section" style="margin-top:.7rem;"></div>
+    </div>
+  </div>
+
+  <div class="modal-bg hidden" id="editorModal">
+    <div class="modal">
+      <div class="row" style="justify-content:space-between;align-items:center;">
+        <h2 id="editorTitle" style="margin:0;">New Recipe</h2>
+        <button class="btn" data-close="editorModal">Close</button>
+      </div>
+      <form id="recipeForm" novalidate>
+        <div class="form-grid" style="margin-top:.8rem;">
+          <div>
+            <div class="field"><label>Title *</label><input name="title" required /></div>
+            <div class="field"><label>Description</label><textarea name="description" rows="5"></textarea></div>
+            <div class="field"><label>Category</label><select name="category"></select></div>
+            <div class="field"><label>Tags (comma-separated)</label><input name="tags" /></div>
+            <div class="field"><label>Image URL</label><input name="imageUrl" type="url" /></div>
+            <div class="field"><label>Upload image (JPEG/PNG)</label><input name="imageFile" type="file" accept="image/jpeg,image/png" /></div>
+            <img id="editorPreview" class="hidden" style="border-radius:12px;border:1px solid var(--border);max-height:220px;object-fit:cover;" alt="preview" />
+          </div>
+          <div>
+            <div class="form-grid" style="grid-template-columns:repeat(3,1fr);">
+              <div class="field"><label>Servings</label><input name="servings" type="number" min="1" /></div>
+              <div class="field"><label>Prep min</label><input name="prepMin" type="number" min="0" /></div>
+              <div class="field"><label>Cook min</label><input name="cookMin" type="number" min="0" /></div>
+            </div>
+            <div class="field"><label>Total min (auto)</label><input name="totalMin" readonly /></div>
+            <div class="form-grid" style="grid-template-columns:repeat(2,1fr);">
+              <div class="field"><label>Calories</label><input name="calories" type="number" min="0" /></div>
+              <div class="field"><label>Protein (g)</label><input name="protein" type="number" min="0" /></div>
+              <div class="field"><label>Carbs (g)</label><input name="carbs" type="number" min="0" /></div>
+              <div class="field"><label>Fat (g)</label><input name="fat" type="number" min="0" /></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:.9rem;">
+          <div class="row" style="justify-content:space-between;"><h3 style="margin:.2rem 0;">Ingredients</h3><button class="btn" type="button" id="addIngredientBtn">+ Ingredient</button></div>
+          <div id="ingredientsWrap"></div>
+        </div>
+
+        <div style="margin-top:.9rem;">
+          <div class="row" style="justify-content:space-between;"><h3 style="margin:.2rem 0;">Steps</h3><button class="btn" type="button" id="addStepBtn">+ Step</button></div>
+          <div id="stepsWrap"></div>
+        </div>
+
+        <div class="menu" style="margin-top:1rem;">
+          <button class="btn sage" type="submit">Save Recipe</button>
+          <button class="btn" type="button" id="cancelEditBtn">Cancel</button>
+          <button class="btn danger" type="button" id="deleteRecipeBtn">Delete</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = 'harvest_table_recipes_v2';
+      const CATEGORY_LIST = ['Breakfast', 'Lunch', 'Dinner', 'Dessert', 'Snack', 'Soup', 'Salad', 'Main', 'Drink'];
+      const TAGS_BASE = ['vegan', 'vegetarian', 'low-carb', 'high-protein', 'asian', 'mediterranean', 'quick', 'under-30-min', 'meal-prep', 'desserts', 'breakfast', 'dinner', 'snacks', 'healthy'];
+      const IMAGE_TYPES = ['image/jpeg', 'image/png'];
+
+      const state = {
+        recipes: [],
+        selectedId: null,
+        filters: { search: '', category: '', tag: '', sort: 'updated', favoritesOnly: false },
+        aiPatch: null,
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+      const now = () => new Date().toISOString();
+      const esc = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+      const parseTags = (t) => [...new Set(String(t || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean))];
+      const recipeImage = (r) => r.imageDataUrl || r.imageUrl || 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1400&q=80';
+
+      function toast(msg, type='') {
+        const el = document.createElement('div');
+        el.className = `toast ${type}`.trim();
+        el.textContent = msg;
+        $('toastWrap').appendChild(el);
+        setTimeout(() => el.remove(), 2800);
+      }
+
+      function sanitizeRecipe(r={}) {
+        const prep = Number(r.prepMin || 0);
+        const cook = Number(r.cookMin || 0);
+        return {
+          id: r.id || uid(),
+          title: String(r.title || '').trim(),
+          description: String(r.description || ''),
+          category: String(r.category || 'Dinner'),
+          tags: Array.isArray(r.tags) ? r.tags.map(t => String(t).toLowerCase()) : [],
+          servings: Math.max(1, Number(r.servings || 1)),
+          prepMin: prep,
+          cookMin: cook,
+          totalMin: Number(r.totalMin || prep + cook),
+          nutrition: {
+            calories: Number(r.nutrition?.calories || 0),
+            protein: Number(r.nutrition?.protein || 0),
+            carbs: Number(r.nutrition?.carbs || 0),
+            fat: Number(r.nutrition?.fat || 0),
+          },
+          ingredients: Array.isArray(r.ingredients) ? r.ingredients.map(i => ({ amount: String(i.amount||''), unit: String(i.unit||''), name: String(i.name||'').trim() })).filter(i => i.name) : [],
+          steps: Array.isArray(r.steps) ? r.steps.map(s => ({ text: String(s.text||'').trim(), done: !!s.done })).filter(s => s.text) : [],
+          favorite: !!r.favorite,
+          imageDataUrl: String(r.imageDataUrl || ''),
+          imageUrl: String(r.imageUrl || ''),
+          createdAt: r.createdAt || now(),
+          updatedAt: r.updatedAt || now(),
+        };
+      }
+
+      function makeRecipe(title, category, tags, imageUrl, servings, prep, cook, nutrition, ingredients, steps, description) {
+        return sanitizeRecipe({
+          id: uid(), title, category, tags, imageUrl, servings, prepMin: prep, cookMin: cook, totalMin: prep + cook,
+          nutrition,
+          ingredients: ingredients.map(i => ({ amount: i[0], unit: i[1], name: i[2] })),
+          steps: steps.map(text => ({ text, done: false })),
+          description,
+          createdAt: now(),
+          updatedAt: now(),
+        });
+      }
+
+      function starterRecipes() {
+        return [
+          makeRecipe('Lemon Herb Chicken Bowl','Dinner',['high-protein','meal-prep','dinner','healthy'],'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80',2,15,20,{calories:510,protein:39,carbs:44,fat:19},[['350','g','chicken breast'],['1','cup','cooked rice'],['2','cups','mixed greens'],['1','tbsp','olive oil'],['1','','lemon']],['Pat the chicken dry and season it generously with salt, pepper, and lemon zest.','Sear in olive oil until deep golden, then lower heat and cook through.','Warm the rice and lightly dress the greens with lemon juice and olive oil.','Slice the chicken and build bowls with rice, greens, and a final squeeze of lemon.'],'This bright chicken bowl feels like a cozy weeknight staple—fresh, filling, and perfect for meal prep lunches. Every bite balances citrus, savory chicken, and crisp greens.'),
+          makeRecipe('Mediterranean Chickpea Salad','Lunch',['vegan','mediterranean','healthy','under-30-min'],'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1400&q=80',3,15,0,{calories:320,protein:11,carbs:37,fat:14},[['1','can','chickpeas'],['1','cup','cucumber'],['1','cup','tomatoes'],['1/4','cup','red onion'],['2','tbsp','olive oil']],['Rinse and drain chickpeas well so the salad stays fresh and not starchy.','Dice cucumber, tomatoes, and onion into even pieces.','Whisk olive oil, lemon juice, oregano, salt, and pepper into a quick dressing.','Toss and let rest for 10 minutes to soak in flavor.'],'A sunny, crunchy salad that tastes even better after a short rest. Great for make-ahead lunches and warm-weather dinners.'),
+          makeRecipe('Creamy Mushroom Pasta','Dinner',['vegetarian','quick','dinner'],'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=1400&q=80',2,10,20,{calories:620,protein:18,carbs:72,fat:28},[['220','g','pasta'],['250','g','mushrooms'],['2','cloves','garlic'],['3/4','cup','cream'],['1/4','cup','parmesan']],['Cook pasta until al dente and save some pasta water.','Sauté mushrooms until deeply browned to build rich flavor.','Add garlic briefly, then stir in cream and simmer gently.','Toss pasta into the sauce with parmesan and a splash of pasta water.'],'Silky, cozy, and full of savory mushroom depth. This is the kind of comfort pasta that feels restaurant-worthy but comes together quickly at home.'),
+          makeRecipe('Berry Overnight Oats','Breakfast',['breakfast','meal-prep','healthy','vegetarian'],'https://images.unsplash.com/photo-1517673400267-0251440c45dc?auto=format&fit=crop&w=1400&q=80',1,8,0,{calories:290,protein:12,carbs:42,fat:8},[['1/2','cup','rolled oats'],['2/3','cup','milk'],['1','tbsp','chia seeds'],['1/2','cup','mixed berries'],['1','tsp','honey']],['Mix oats, milk, chia, and honey in a jar until fully combined.','Fold in half the berries and reserve the rest for topping.','Refrigerate overnight (or at least 6 hours).','Top with remaining berries before eating.'],'A calm, nourishing breakfast that’s ready when you wake up. Creamy oats and berries make mornings feel effortless and a little special.'),
+          makeRecipe('Tofu Stir-Fry with Ginger','Dinner',['vegan','asian','under-30-min','healthy'],'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1400&q=80&sat=-20',2,12,15,{calories:430,protein:24,carbs:36,fat:20},[['300','g','firm tofu'],['2','cups','broccoli'],['1','cup','bell pepper'],['1','tbsp','soy sauce'],['1','tsp','ginger']],['Press tofu and pat dry so it browns nicely.','Sear tofu cubes until crisp and golden on the edges.','Stir-fry vegetables over high heat so they stay bright and crunchy.','Return tofu to the pan with soy sauce and ginger, then toss to coat.'],'A colorful, weeknight-friendly stir-fry with bright ginger notes and satisfying texture. It’s quick, wholesome, and easy to customize.'),
+          makeRecipe('Greek Yogurt Pancakes','Breakfast',['breakfast','high-protein','vegetarian'],'https://images.unsplash.com/photo-1528207776546-365bb710ee93?auto=format&fit=crop&w=1400&q=80',3,12,12,{calories:340,protein:17,carbs:42,fat:11},[['1','cup','flour'],['1','cup','greek yogurt'],['2','','eggs'],['1','tsp','baking powder'],['1/2','cup','milk']],['Whisk eggs, yogurt, and milk until smooth.','Combine dry ingredients and fold them in gently.','Cook spoonfuls on a lightly greased skillet over medium heat.','Flip once bubbles form and cook until fluffy and golden.'],'These pancakes are tender, protein-rich, and beautifully fluffy. A family breakfast favorite with just the right amount of tang.'),
+          makeRecipe('Shakshuka with Spinach','Breakfast',['breakfast','vegetarian','mediterranean'],'https://images.unsplash.com/photo-1590412200988-a436970781fa?auto=format&fit=crop&w=1400&q=80',2,10,20,{calories:360,protein:18,carbs:20,fat:22},[['4','','eggs'],['1','can','crushed tomatoes'],['2','cups','spinach'],['1','','onion'],['1','tsp','paprika']],['Cook onion in olive oil until soft and sweet.','Add tomatoes, paprika, and seasoning; simmer until thickened.','Stir in spinach until wilted.','Make wells, crack in eggs, cover, and cook until whites are set.'],'A warm, saucy breakfast skillet that feels comforting and vibrant. Serve with crusty bread to scoop up every last bit.'),
+          makeRecipe('Salmon with Herb Potatoes','Dinner',['dinner','healthy','high-protein'],'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=1400&q=80',2,12,22,{calories:560,protein:36,carbs:32,fat:30},[['2','fillets','salmon'],['300','g','baby potatoes'],['1','tbsp','olive oil'],['1','tbsp','dill'],['1','','lemon']],['Parboil potatoes briefly to speed up roasting.','Toss potatoes with dill, oil, salt, and pepper.','Add salmon to the tray, season, and roast until just flaky.','Finish with lemon juice and fresh herbs.'],'Simple, elegant, and full of fresh flavor. The crispy potatoes and tender salmon make this perfect for a relaxed dinner at home.'),
+          makeRecipe('Chicken Pho Shortcut','Dinner',['asian','under-30-min','high-protein'],'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=1400&q=80',3,15,20,{calories:410,protein:31,carbs:38,fat:13},[['600','ml','chicken broth'],['250','g','chicken breast'],['150','g','rice noodles'],['1','tsp','ginger'],['1','tbsp','fish sauce']],['Simmer broth with ginger and aromatics to build flavor quickly.','Poach chicken gently, then shred into strips.','Cook rice noodles separately to keep broth clear.','Assemble bowls and top with herbs, lime, and chili if desired.'],'A fast, comforting noodle soup inspired by pho—fragrant, slurpable, and perfect when you want something soothing but quick.'),
+          makeRecipe('Roasted Veggie Couscous','Lunch',['vegetarian','meal-prep','healthy'],'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?auto=format&fit=crop&w=1400&q=80',4,15,25,{calories:390,protein:11,carbs:58,fat:12},[['1','cup','couscous'],['1','','zucchini'],['1','','bell pepper'],['1','','red onion'],['2','tbsp','olive oil']],['Roast the vegetables until edges are caramelized and sweet.','Hydrate couscous with hot stock and fluff with a fork.','Fold roasted vegetables into couscous with lemon and herbs.','Adjust seasoning and chill or serve warm.'],'A colorful meal-prep classic that stays delicious for days. Fresh herbs and lemon keep it lively and bright.'),
+          makeRecipe('Chocolate Chia Pudding','Dessert',['desserts','vegan','healthy','snacks'],'https://images.unsplash.com/photo-1481391032119-d89fee407e44?auto=format&fit=crop&w=1400&q=80',2,8,0,{calories:250,protein:8,carbs:20,fat:16},[['1/4','cup','chia seeds'],['1','cup','almond milk'],['1.5','tbsp','cocoa powder'],['1','tbsp','maple syrup'],['1','tsp','vanilla']],['Whisk ingredients thoroughly to avoid clumps.','Rest for 5 minutes, whisk again, and refrigerate for 3+ hours.','Stir before serving and adjust sweetness if needed.','Top with berries, coconut, or nuts.'],'Creamy, chocolatey, and naturally satisfying. A lovely make-ahead treat for busy weekdays or cozy evenings.'),
+          makeRecipe('Turkey Lettuce Wraps','Dinner',['low-carb','high-protein','under-30-min'],'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1400&q=80',3,10,15,{calories:330,protein:28,carbs:14,fat:17},[['350','g','ground turkey'],['1','tbsp','soy sauce'],['1','tsp','sesame oil'],['8','leaves','lettuce'],['1','','carrot']],['Cook turkey with garlic and ginger until browned and fragrant.','Stir in soy sauce and sesame oil.','Add grated carrot for sweetness and crunch.','Spoon into lettuce cups and garnish as you like.'],'Fresh, crisp, and protein-packed. These wraps are ideal for quick dinners that still feel exciting and flavorful.'),
+          makeRecipe('Mediterranean Baked Cod','Dinner',['mediterranean','high-protein','healthy'],'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1400&q=80',2,10,18,{calories:370,protein:34,carbs:14,fat:18},[['2','fillets','cod'],['1/2','cup','cherry tomatoes'],['1/4','cup','olives'],['1','tbsp','olive oil'],['1','tbsp','capers']],['Arrange cod with tomatoes, olives, and capers in a dish.','Drizzle with olive oil and season generously.','Bake until cod is opaque and flakes easily.','Finish with lemon and spoon over pan juices.'],'A clean, bright fish dish with briny Mediterranean flavor. Elegant enough for guests, easy enough for weeknights.'),
+          makeRecipe('Banana Walnut Muffins','Snack',['snacks','breakfast','desserts','vegetarian'],'https://images.unsplash.com/photo-1557925923-cd4648e211a0?auto=format&fit=crop&w=1400&q=80',8,15,22,{calories:240,protein:5,carbs:31,fat:11},[['2','','ripe bananas'],['1.5','cups','flour'],['1/3','cup','brown sugar'],['1/3','cup','oil'],['1/2','cup','walnuts']],['Mash bananas until smooth with a few soft chunks.','Mix wet ingredients, then fold in dry ingredients gently.','Scoop into muffin cups and top with chopped walnuts.','Bake until golden and springy.'],'Soft, warmly spiced muffins with nutty crunch. A homey recipe that makes the kitchen smell incredible.'),
+          makeRecipe('Pesto Zucchini Noodles','Lunch',['low-carb','vegetarian','quick','under-30-min'],'https://images.unsplash.com/photo-1556761223-4c4282c73f77?auto=format&fit=crop&w=1400&q=80',2,12,10,{calories:290,protein:9,carbs:14,fat:22},[['3','','zucchini'],['3','tbsp','pesto'],['1/4','cup','cherry tomatoes'],['2','tbsp','parmesan'],['1','tbsp','olive oil']],['Spiralize zucchini and pat dry.','Sauté briefly over high heat to keep texture.','Toss off heat with pesto and tomatoes.','Finish with parmesan and cracked pepper.'],'A light, vibrant lunch when you want something fresh and quick. Pesto brings richness while zucchini keeps it airy.'),
+          makeRecipe('Beef and Broccoli Skillet','Dinner',['asian','high-protein','under-30-min','meal-prep'],'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1400&q=80',3,12,16,{calories:470,protein:33,carbs:24,fat:26},[['400','g','beef strips'],['3','cups','broccoli'],['1.5','tbsp','soy sauce'],['1','tsp','cornstarch'],['1','tsp','sesame oil']],['Coat beef lightly with soy and cornstarch.','Sear quickly in a very hot pan for caramelization.','Cook broccoli until crisp-tender with a splash of water.','Return beef, add sesame oil, and toss until glossy.'],'A takeout-style favorite with bold flavor and satisfying texture. Great for quick dinners or make-ahead lunches.'),
+          makeRecipe('Spiced Lentil Soup','Dinner',['vegan','healthy','meal-prep'],'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=1400&q=80',4,10,30,{calories:310,protein:16,carbs:44,fat:7},[['1','cup','lentils'],['1','','onion'],['2','','carrots'],['2','cloves','garlic'],['1','tsp','cumin']],['Sauté onion, carrot, and garlic until aromatic.','Add lentils, spices, tomatoes, and broth.','Simmer until lentils are tender and soup thickens naturally.','Blend partially for creaminess and adjust seasoning.'],'A nourishing soup that feels like a hug in a bowl. It stores beautifully and tastes even better the next day.'),
+          makeRecipe('Avocado Egg Toast','Breakfast',['breakfast','under-30-min','high-protein'],'https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=1400&q=80',1,8,6,{calories:360,protein:15,carbs:28,fat:22},[['2','slices','whole grain bread'],['1','','avocado'],['1','','egg'],['1','tsp','lemon juice'],['1','pinch','chili flakes']],['Toast bread until crisp and sturdy.','Mash avocado with lemon, salt, and pepper.','Cook egg to your preferred doneness.','Spread avocado and top with egg and chili flakes.'],'Simple, creamy, and deeply satisfying. A quick breakfast that still feels intentional and nourishing.'),
+          makeRecipe('Baked Falafel Plate','Dinner',['vegan','mediterranean','healthy'],'https://images.unsplash.com/photo-1481931098730-318b6f776db0?auto=format&fit=crop&w=1400&q=80',3,20,25,{calories:420,protein:15,carbs:52,fat:16},[['1','can','chickpeas'],['1/2','cup','parsley'],['2','cloves','garlic'],['2','tbsp','flour'],['1','tsp','cumin']],['Pulse chickpeas with herbs and spices until coarse and sticky.','Shape into patties and place on a lined tray.','Bake until golden, flipping halfway for even browning.','Serve with salad and tahini sauce.'],'Crisp on the outside and tender inside, these baked falafel are flavorful, cozy, and perfect for sharing.'),
+          makeRecipe('Strawberry Yogurt Parfait','Breakfast',['breakfast','healthy','snacks','vegetarian'],'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=1400&q=80',1,8,0,{calories:280,protein:14,carbs:34,fat:9},[['3/4','cup','greek yogurt'],['1/2','cup','strawberries'],['1/4','cup','granola'],['1','tsp','honey']],['Layer yogurt, strawberries, and granola in a glass.','Repeat for a second layer with balance in each spoonful.','Drizzle honey on top and add mint if desired.','Serve right away for best crunch.'],'A pretty little parfait that works for breakfast, snack, or a light dessert. Fresh, creamy, and easy to love.'),
+          makeRecipe('Sesame Chicken Meal Prep','Dinner',['high-protein','meal-prep','asian'],'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=1400&q=80',4,15,20,{calories:540,protein:40,carbs:48,fat:20},[['500','g','chicken thigh'],['2','tbsp','soy sauce'],['1','tbsp','honey'],['1','tbsp','sesame seeds'],['2','cups','broccoli']],['Marinate chicken briefly in soy, honey, and ginger.','Cook until caramelized and juicy.','Steam or roast broccoli and prep rice in parallel.','Portion into containers and top with sesame seeds.'],'A dependable meal-prep recipe with sweet-savory flavor and balanced nutrition. It reheats beautifully for busy days.'),
+          makeRecipe('Tomato Basil Bruschetta','Snack',['snacks','vegetarian','mediterranean','under-30-min'],'https://images.unsplash.com/photo-1572441710534-680d4a4f99f1?auto=format&fit=crop&w=1400&q=80',4,12,8,{calories:210,protein:5,carbs:27,fat:9},[['1','baguette','sliced'],['2','cups','tomatoes'],['1/4','cup','basil'],['1','clove','garlic'],['1','tbsp','olive oil']],['Toast baguette slices until crisp.','Mix tomatoes, basil, olive oil, salt, and pepper.','Rub toast with garlic while warm.','Top right before serving to keep texture.'],'Classic bruschetta with juicy tomatoes and fragrant basil. It’s simple, colorful, and perfect for sharing.'),
+          makeRecipe('Coconut Curry Noodles','Dinner',['asian','vegan','under-30-min'],'https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&w=1400&q=80',2,10,18,{calories:560,protein:13,carbs:64,fat:28},[['200','ml','coconut milk'],['150','g','rice noodles'],['1','tbsp','curry paste'],['1','cup','mushrooms'],['1','cup','spinach']],['Toast curry paste briefly for stronger aroma.','Add coconut milk and stock, simmer until velvety.','Cook noodles separately, then combine at the end.','Fold in vegetables and finish with lime.'],'Creamy and warming with a gentle kick. This noodle bowl is weeknight comfort with vibrant curry flavor.'),
+          makeRecipe('Apple Cinnamon Crumble','Dessert',['desserts','vegetarian'],'https://images.unsplash.com/photo-1478145046317-39f10e56b5e9?auto=format&fit=crop&w=1400&q=80',6,20,30,{calories:340,protein:4,carbs:52,fat:13},[['6','','apples'],['1/2','cup','brown sugar'],['1','cup','oats'],['1/2','cup','flour'],['1/3','cup','butter']],['Toss apples with sugar and cinnamon until glossy.','Rub butter into oats and flour to form crumble topping.','Layer apples and topping in a baking dish.','Bake until bubbly and deeply golden.'],'A nostalgic dessert that feels like home. Sweet baked apples and crunchy topping make every spoonful comforting.'),
+          makeRecipe('Protein Power Smoothie','Breakfast',['high-protein','breakfast','healthy','under-30-min'],'https://images.unsplash.com/photo-1505252585461-04db1eb84625?auto=format&fit=crop&w=1400&q=80',1,6,0,{calories:330,protein:29,carbs:32,fat:9},[['1','scoop','protein powder'],['1','','banana'],['1','tbsp','peanut butter'],['250','ml','milk'],['1/2','cup','ice']],['Add milk first to help the blender run smoothly.','Blend with banana, protein powder, peanut butter, and ice.','Blend until silky and adjust thickness to preference.','Serve immediately while chilled and creamy.'],'Quick, creamy, and energizing. This smoothie is a reliable way to fuel mornings or recover after workouts.'),
+          makeRecipe('Grilled Halloumi Veg Skewers','Dinner',['vegetarian','mediterranean','under-30-min'],'https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=1400&q=80',3,15,12,{calories:430,protein:19,carbs:18,fat:31},[['250','g','halloumi'],['1','','zucchini'],['1','','bell pepper'],['1','','red onion'],['1','tbsp','olive oil']],['Cut halloumi and vegetables into similar pieces.','Thread onto skewers and brush with olive oil and herbs.','Grill over medium-high heat until charred in spots.','Serve warm with lemony yogurt or pita.'],'Smoky, salty, and colorful—these skewers feel festive yet easy. Great for casual dinners and weekend cookouts.'),
+          makeRecipe('Blueberry Banana Bread','Snack',['snacks','desserts','breakfast','vegetarian'],'https://images.unsplash.com/photo-1603048297172-c92544798d5a?auto=format&fit=crop&w=1400&q=80',8,15,50,{calories:280,protein:5,carbs:41,fat:10},[['2','','ripe bananas'],['1 1/2','cups','flour'],['1/2','cup','blueberries'],['1/3','cup','brown sugar'],['1/3','cup','oil']],['Mash bananas thoroughly until smooth and fragrant.','Whisk in sugar, oil, and eggs until cohesive.','Fold in flour and blueberries gently to avoid overmixing.','Bake in a loaf pan until golden and a skewer comes out clean.'],'Moist banana bread with juicy blueberries and a tender crumb. A cozy bake for breakfast, snacks, and gifting.'),
+        ];
+      }
+
+      function load() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          state.recipes = starterRecipes();
+          state.selectedId = state.recipes[0]?.id || null;
+          save();
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) throw new Error('invalid data');
+          state.recipes = parsed.map(sanitizeRecipe).filter(r => r.title);
+          state.selectedId = state.recipes[0]?.id || null;
+        } catch {
+          state.recipes = starterRecipes();
+          state.selectedId = state.recipes[0]?.id || null;
+          save();
+        }
+      }
+
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.recipes));
+        } catch {
+          toast('Could not save data (possibly storage full).', 'error');
+        }
+      }
+
+      function filteredRecipes() {
+        const q = state.filters.search.trim().toLowerCase();
+        const arr = state.recipes.filter(r => {
+          if (state.filters.category && r.category !== state.filters.category) return false;
+          if (state.filters.tag && !r.tags.includes(state.filters.tag)) return false;
+          if (state.filters.favoritesOnly && !r.favorite) return false;
+          if (!q) return true;
+          const hay = `${r.title} ${r.description} ${r.tags.join(' ')} ${r.ingredients.map(i => `${i.amount} ${i.unit} ${i.name}`).join(' ')}`.toLowerCase();
+          return hay.includes(q);
+        });
+
+        arr.sort((a, b) => {
+          if (state.filters.sort === 'az') return a.title.localeCompare(b.title);
+          if (state.filters.sort === 'fav') {
+            if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+            return new Date(b.updatedAt) - new Date(a.updatedAt);
+          }
+          if (state.filters.sort === 'quick') return a.totalMin - b.totalMin;
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+        });
+        return arr;
+      }
+
+      function renderFilterOptions() {
+        $('categoryFilter').innerHTML = `<option value="">All categories</option>${CATEGORY_LIST.map(c => `<option value="${esc(c)}" ${state.filters.category===c?'selected':''}>${esc(c)}</option>`).join('')}`;
+        const tags = [...new Set([...TAGS_BASE, ...state.recipes.flatMap(r => r.tags)])].sort((a,b)=>a.localeCompare(b));
+        $('tagFilter').innerHTML = `<option value="">All tags</option>${tags.map(t => `<option value="${esc(t)}" ${state.filters.tag===t?'selected':''}>${esc(t)}</option>`).join('')}`;
+        $('allRecipesPanel').innerHTML = `<button data-cat="">All categories</button>${CATEGORY_LIST.map(c => `<button data-cat="${esc(c)}">${esc(c)}</button>`).join('')}`;
+      }
+
+      function renderGrid() {
+        const grid = $('recipesGrid');
+        const list = filteredRecipes();
+        if (!list.length) {
+          grid.innerHTML = `<div class="empty">No recipes match your filters yet. Try adjusting search or category.</div>`;
+          return;
+        }
+        grid.innerHTML = list.map(r => `
+          <article class="recipe-card" data-id="${r.id}">
+            <img class="recipe-image" src="${esc(recipeImage(r))}" alt="${esc(r.title)}" />
+            <div class="recipe-body">
+              <h3 class="recipe-title">${esc(r.title)}</h3>
+              <div class="meta"><span>${esc(r.category)}</span><span>•</span><span>${r.totalMin} min</span><span>•</span><span>${r.servings} servings</span></div>
+              <div class="chips">${r.tags.slice(0,4).map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      function parseAmount(v) {
+        const s = String(v).trim();
+        if (/^\d+(\.\d+)?$/.test(s)) return Number(s);
+        if (/^\d+\/\d+$/.test(s)) { const [a,b]=s.split('/').map(Number); return b?a/b:null; }
+        if (/^\d+\s+\d+\/\d+$/.test(s)) { const [w,f]=s.split(/\s+/); const [a,b]=f.split('/').map(Number); return b?Number(w)+a/b:null; }
+        return null;
+      }
+
+      function openRecipeModal(recipeId) {
+        const r = state.recipes.find(x => x.id === recipeId);
+        if (!r) return;
+        state.selectedId = r.id;
+
+        $('recipeModalContent').innerHTML = `
+          <div class="row" style="justify-content:space-between;align-items:center;">
+            <h2 style="margin:0;">${esc(r.title)}</h2>
+            <div class="menu">
+              <button class="btn soft" id="favToggleBtn">${r.favorite ? '⭐ Favorited' : '☆ Favorite'}</button>
+              <button class="btn soft" id="editRecipeBtn">Edit</button>
+              <button class="btn soft" id="aiAssistBtn">AI Assistant</button>
+              <button class="btn" data-close="recipeModal">Close</button>
+            </div>
+          </div>
+          <div class="detail-layout" style="margin-top:.8rem;">
+            <div>
+              <img class="detail-image" src="${esc(recipeImage(r))}" alt="${esc(r.title)}" />
+              <p class="meta" style="margin:.65rem 0 0;line-height:1.5;">${esc(r.description || 'No description yet.')}</p>
+              <div class="chips" style="margin-top:.6rem;">${r.tags.map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
+            </div>
+            <div class="detail-content">
+              <div class="section">
+                <div class="meta"><strong style="color:var(--text)">${esc(r.category)}</strong><span>•</span><span>Prep ${r.prepMin} min</span><span>•</span><span>Cook ${r.cookMin} min</span><span>•</span><span>Total ${r.totalMin} min</span><span>•</span><span>${r.servings} servings</span></div>
+              </div>
+              <div class="section">
+                <h3 style="margin:.1rem 0 .55rem;">Nutrition</h3>
+                <div class="nutrition">
+                  <div class="nutri"><strong>${r.nutrition.calories}</strong> kcal</div>
+                  <div class="nutri"><strong>${r.nutrition.protein}g</strong> protein</div>
+                  <div class="nutri"><strong>${r.nutrition.carbs}g</strong> carbs</div>
+                  <div class="nutri"><strong>${r.nutrition.fat}g</strong> fat</div>
+                </div>
+              </div>
+              <div class="section">
+                <div class="menu" style="justify-content:space-between;">
+                  <h3 style="margin:.1rem 0;">Scale servings</h3>
+                  <div class="menu"><input id="scaleServings" type="number" min="1" value="${r.servings}" style="max-width:90px;border:1px solid var(--border);border-radius:10px;padding:.45rem;" /><button class="btn" id="scaleBtn">Apply</button></div>
+                </div>
+              </div>
+              <div class="section">
+                <h3 style="margin:.1rem 0 .5rem;">Ingredients</h3>
+                <ul class="list">${r.ingredients.map(i => `<li>${esc([i.amount, i.unit, i.name].filter(Boolean).join(' '))}</li>`).join('')}</ul>
+              </div>
+              <div class="section">
+                <h3 style="margin:.1rem 0 .5rem;">Step-by-step instructions</h3>
+                <ol class="list">${r.steps.map(s => `<li>${esc(s.text)}</li>`).join('')}</ol>
+              </div>
+            </div>
+          </div>
+        `;
+
+        openModal('recipeModal');
+
+        $('favToggleBtn').onclick = () => {
+          r.favorite = !r.favorite;
+          r.updatedAt = now();
+          save();
+          renderAll(false);
+          openRecipeModal(r.id);
+        };
+
+        $('scaleBtn').onclick = () => {
+          const target = Number($('scaleServings').value);
+          if (!target || target <= 0) return toast('Enter a valid servings value.', 'error');
+          const factor = target / r.servings;
+          r.ingredients = r.ingredients.map(i => {
+            const n = parseAmount(i.amount);
+            if (n === null) return i;
+            return { ...i, amount: String(Math.round((n * factor) * 100) / 100) };
+          });
+          r.nutrition = {
+            calories: Math.round((r.nutrition.calories / r.servings) * target),
+            protein: Math.round((r.nutrition.protein / r.servings) * target),
+            carbs: Math.round((r.nutrition.carbs / r.servings) * target),
+            fat: Math.round((r.nutrition.fat / r.servings) * target),
+          };
+          r.servings = target;
+          r.updatedAt = now();
+          save();
+          renderAll(false);
+          openRecipeModal(r.id);
+          toast('Servings scaled.', 'success');
+        };
+
+        $('editRecipeBtn').onclick = () => { closeModal('recipeModal'); openEditor(r.id); };
+        $('aiAssistBtn').onclick = () => { closeModal('recipeModal'); openAI(); };
+      }
+
+      function openModal(id) { $(id).classList.remove('hidden'); }
+      function closeModal(id) { $(id).classList.add('hidden'); }
+
+      function bindModalClose() {
+        document.addEventListener('click', (e) => {
+          const closeBtn = e.target.closest('[data-close]');
+          if (closeBtn) {
+            closeModal(closeBtn.dataset.close);
+            return;
+          }
+
+          const backdrop = e.target.classList?.contains('modal-bg') ? e.target : null;
+          if (backdrop && !backdrop.classList.contains('hidden')) {
+            closeModal(backdrop.id);
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key !== 'Escape') return;
+          const openModal = document.querySelector('.modal-bg:not(.hidden)');
+          if (openModal) closeModal(openModal.id);
+        });
+      }
+
+      function openSettings() {
+        $('apiKeyInput').value = localStorage.getItem('openai_api_key') || '';
+        openModal('settingsModal');
+      }
+
+      function compressImage(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('read error'));
+          reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error('image error'));
+            img.onload = () => {
+              const maxW = 1200;
+              const scale = Math.min(1, maxW / img.width);
+              const w = Math.round(img.width * scale);
+              const h = Math.round(img.height * scale);
+              const c = document.createElement('canvas');
+              c.width = w; c.height = h;
+              const ctx = c.getContext('2d');
+              if (!ctx) return reject(new Error('canvas error'));
+              ctx.drawImage(img, 0, 0, w, h);
+              resolve(c.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.84));
+            };
+            img.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function openEditor(id=null) {
+        const existing = id ? state.recipes.find(r => r.id === id) : null;
+        const draft = existing ? structuredClone(existing) : sanitizeRecipe({
+          id: uid(), title: '', description: '', category: 'Dinner', tags: ['healthy'], servings: 2, prepMin: 0, cookMin: 0,
+          totalMin: 0, nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+          ingredients: [{ amount: '', unit: '', name: '' }], steps: [{ text: '', done: false }], imageUrl: '', imageDataUrl: '',
+        });
+
+        openModal('editorModal');
+        $('editorTitle').textContent = existing ? 'Edit Recipe' : 'New Recipe';
+        const form = $('recipeForm');
+        form.elements.category.innerHTML = CATEGORY_LIST.map(c => `<option value="${esc(c)}" ${draft.category===c?'selected':''}>${esc(c)}</option>`).join('');
+
+        form.elements.title.value = draft.title;
+        form.elements.description.value = draft.description;
+        form.elements.tags.value = draft.tags.join(', ');
+        form.elements.servings.value = draft.servings;
+        form.elements.prepMin.value = draft.prepMin;
+        form.elements.cookMin.value = draft.cookMin;
+        form.elements.totalMin.value = draft.totalMin;
+        form.elements.calories.value = draft.nutrition.calories;
+        form.elements.protein.value = draft.nutrition.protein;
+        form.elements.carbs.value = draft.nutrition.carbs;
+        form.elements.fat.value = draft.nutrition.fat;
+        form.elements.imageUrl.value = draft.imageUrl || '';
+
+        const preview = $('editorPreview');
+        const src = draft.imageDataUrl || draft.imageUrl;
+        preview.src = src || '';
+        preview.classList.toggle('hidden', !src);
+
+        const ingWrap = $('ingredientsWrap');
+        const stepsWrap = $('stepsWrap');
+
+        const drawIngs = () => {
+          if (!draft.ingredients.length) draft.ingredients.push({ amount:'', unit:'', name:'' });
+          ingWrap.innerHTML = draft.ingredients.map((i, idx) => `
+            <div class="ing-row">
+              <input data-ing="${idx}" data-f="amount" placeholder="Amount" value="${esc(i.amount)}" />
+              <input data-ing="${idx}" data-f="unit" placeholder="Unit" value="${esc(i.unit)}" />
+              <input data-ing="${idx}" data-f="name" placeholder="Ingredient" value="${esc(i.name)}" />
+              <button type="button" class="btn" data-rm-ing="${idx}">✕</button>
+            </div>
+          `).join('');
+        };
+
+        const drawSteps = () => {
+          if (!draft.steps.length) draft.steps.push({ text:'', done:false });
+          stepsWrap.innerHTML = draft.steps.map((s, idx) => `
+            <div class="step-row">
+              <textarea data-step="${idx}" data-f="text" rows="2" placeholder="Step instruction">${esc(s.text)}</textarea>
+              <div style="display:grid;gap:.25rem;">
+                <button type="button" class="btn" data-up="${idx}" ${idx===0?'disabled':''}>↑</button>
+                <button type="button" class="btn" data-down="${idx}" ${idx===draft.steps.length-1?'disabled':''}>↓</button>
+                <button type="button" class="btn" data-rm-step="${idx}">✕</button>
+              </div>
+            </div>
+          `).join('');
+        };
+
+        drawIngs(); drawSteps();
+
+        form.oninput = (e) => {
+          if (e.target.name === 'prepMin' || e.target.name === 'cookMin') {
+            const prep = Number(form.elements.prepMin.value || 0);
+            const cook = Number(form.elements.cookMin.value || 0);
+            form.elements.totalMin.value = prep + cook;
+          }
+          const i = e.target.dataset.ing;
+          const s = e.target.dataset.step;
+          if (i !== undefined) draft.ingredients[Number(i)][e.target.dataset.f] = e.target.value;
+          if (s !== undefined) draft.steps[Number(s)][e.target.dataset.f] = e.target.value;
+        };
+
+        const onClicks = (e) => {
+          const rmIng = e.target.dataset.rmIng;
+          const rmStep = e.target.dataset.rmStep;
+          const up = e.target.dataset.up;
+          const down = e.target.dataset.down;
+          if (rmIng !== undefined) { draft.ingredients.splice(Number(rmIng),1); drawIngs(); }
+          if (rmStep !== undefined) { draft.steps.splice(Number(rmStep),1); drawSteps(); }
+          if (up !== undefined) { const idx = Number(up); [draft.steps[idx-1], draft.steps[idx]] = [draft.steps[idx], draft.steps[idx-1]]; drawSteps(); }
+          if (down !== undefined) { const idx = Number(down); [draft.steps[idx], draft.steps[idx+1]] = [draft.steps[idx+1], draft.steps[idx]]; drawSteps(); }
+        };
+
+        ingWrap.onclick = onClicks;
+        stepsWrap.onclick = onClicks;
+
+        $('addIngredientBtn').onclick = () => { draft.ingredients.push({ amount:'', unit:'', name:'' }); drawIngs(); };
+        $('addStepBtn').onclick = () => { draft.steps.push({ text:'', done:false }); drawSteps(); };
+
+        form.elements.imageUrl.oninput = (e) => {
+          draft.imageUrl = e.target.value.trim();
+          if (draft.imageUrl) draft.imageDataUrl = '';
+          const imgSrc = draft.imageDataUrl || draft.imageUrl;
+          preview.src = imgSrc || '';
+          preview.classList.toggle('hidden', !imgSrc);
+        };
+
+        form.elements.imageFile.onchange = async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (!IMAGE_TYPES.includes(file.type)) {
+            toast('Only JPEG and PNG images are supported.', 'error');
+            e.target.value = '';
+            return;
+          }
+          try {
+            draft.imageDataUrl = await compressImage(file);
+            draft.imageUrl = '';
+            form.elements.imageUrl.value = '';
+            preview.src = draft.imageDataUrl;
+            preview.classList.remove('hidden');
+          } catch {
+            toast('Failed to process image.', 'error');
+          }
+        };
+
+        $('deleteRecipeBtn').style.display = existing ? 'inline-flex' : 'none';
+        $('deleteRecipeBtn').onclick = () => {
+          if (!existing) return;
+          if (!confirm('Delete this recipe?')) return;
+          state.recipes = state.recipes.filter(r => r.id !== existing.id);
+          state.selectedId = state.recipes[0]?.id || null;
+          save();
+          closeModal('editorModal');
+          renderAll();
+          toast('Recipe deleted.', 'success');
+        };
+
+        $('cancelEditBtn').onclick = () => closeModal('editorModal');
+
+        form.onsubmit = (e) => {
+          e.preventDefault();
+          const payload = sanitizeRecipe({
+            ...draft,
+            title: form.elements.title.value.trim(),
+            description: form.elements.description.value.trim(),
+            category: form.elements.category.value,
+            tags: parseTags(form.elements.tags.value),
+            servings: Number(form.elements.servings.value || 1),
+            prepMin: Number(form.elements.prepMin.value || 0),
+            cookMin: Number(form.elements.cookMin.value || 0),
+            totalMin: Number(form.elements.prepMin.value || 0) + Number(form.elements.cookMin.value || 0),
+            nutrition: {
+              calories: Number(form.elements.calories.value || 0),
+              protein: Number(form.elements.protein.value || 0),
+              carbs: Number(form.elements.carbs.value || 0),
+              fat: Number(form.elements.fat.value || 0),
+            },
+            ingredients: draft.ingredients.map(i => ({ amount:i.amount.trim(), unit:i.unit.trim(), name:i.name.trim() })).filter(i => i.name),
+            steps: draft.steps.map(s => ({ text:s.text.trim(), done:false })).filter(s => s.text),
+            updatedAt: now(),
+            createdAt: draft.createdAt || now(),
+          });
+
+          if (!payload.title) return toast('Title is required.', 'error');
+          if (!payload.ingredients.length) return toast('Add at least one ingredient.', 'error');
+          if (!payload.steps.length) return toast('Add at least one step.', 'error');
+
+          const idx = state.recipes.findIndex(r => r.id === payload.id);
+          if (idx >= 0) state.recipes[idx] = payload;
+          else state.recipes.unshift(payload);
+
+          state.selectedId = payload.id;
+          save();
+          closeModal('editorModal');
+          renderAll();
+          toast('Recipe saved.', 'success');
+        };
+      }
+
+      function buildShoppingList(ids) {
+        const selected = state.recipes.filter(r => ids.includes(r.id));
+        const m = new Map();
+        selected.forEach(r => {
+          r.ingredients.forEach(i => {
+            const key = `${i.name.toLowerCase()}|${i.unit.toLowerCase()}`;
+            const n = parseAmount(i.amount);
+            if (!m.has(key)) m.set(key, { name: i.name, unit: i.unit, num: n, text: i.amount });
+            else {
+              const ex = m.get(key);
+              if (ex.num !== null && n !== null) ex.num += n;
+              else ex.text = `${ex.text} + ${i.amount}`;
+            }
+          });
+        });
+        return [...m.values()].sort((a,b)=>a.name.localeCompare(b.name));
+      }
+
+      function openShopping() {
+        openModal('shoppingModal');
+        const choices = $('shoppingChoices');
+        choices.innerHTML = state.recipes.map(r => `<label style="display:block;margin:.25rem 0;"><input type="checkbox" data-rid="${r.id}" /> ${esc(r.title)}</label>`).join('');
+        $('shoppingOutput').innerHTML = '<em class="meta">Select recipes to generate list.</em>';
+
+        choices.onchange = () => {
+          const ids = Array.from(choices.querySelectorAll('input[data-rid]:checked')).map(i => i.dataset.rid);
+          if (!ids.length) {
+            $('shoppingOutput').innerHTML = '<em class="meta">Select recipes to generate list.</em>';
+            return;
+          }
+          const items = buildShoppingList(ids);
+          $('shoppingOutput').innerHTML = `<h3 style="margin:.2rem 0;">Merged ingredients (${items.length})</h3><ul class="list">${items.map(i => `<li>${esc(i.num!==null?String(Math.round(i.num*100)/100):i.text)} ${esc(i.unit)} ${esc(i.name)}</li>`).join('')}</ul>`;
+        };
+      }
+
+      const OFFLINE_SUBS = {
+        eggs:['flax egg (1 tbsp flax + 3 tbsp water)','chia egg (1 tbsp chia + 3 tbsp water)','applesauce (1/4 cup)','mashed banana (1/4 cup)'],
+        butter:['olive oil (use 3/4 amount)','coconut oil 1:1','vegan butter 1:1','greek yogurt in baking'],
+        milk:['soy milk','oat milk','almond milk','water + cream'],
+        cream:['greek yogurt','evaporated milk','cashew cream','half-and-half'],
+        yogurt:['sour cream','coconut yogurt','buttermilk'],
+        'sour cream':['greek yogurt','creme fraiche','blended cottage cheese'],
+        flour:['gluten-free flour blend','oat flour','almond flour'],
+        breadcrumbs:['crushed oats','panko','crushed crackers'],
+        cornstarch:['arrowroot','potato starch','tapioca starch'],
+        'soy sauce':['tamari','coconut aminos','liquid aminos'],
+        'fish sauce':['soy sauce + lime','miso + water'],
+        worcestershire:['soy sauce + vinegar + sugar','A1 sauce'],
+        honey:['maple syrup','agave','brown rice syrup'],
+        sugar:['coconut sugar','brown sugar','maple syrup (reduce liquid)'],
+        'baking powder':['1/4 tsp soda + 1/2 tsp cream of tartar'],
+        'baking soda':['baking powder (3x)'],
+        yeast:['sourdough starter','baking powder for quick breads'],
+        garlic:['garlic powder (1/4 tsp per clove)','shallot'],
+        onion:['shallot','leek','onion powder'],
+        ginger:['ground ginger (1/4 tsp per tbsp fresh)','galangal'],
+        basil:['oregano','parsley + mint'],
+        oregano:['marjoram','italian seasoning'],
+        parsley:['cilantro','celery leaves'],
+        cumin:['ground coriander','caraway'],
+        paprika:['smoked paprika','cayenne + sweet pepper'],
+        cinnamon:['nutmeg','allspice'],
+        vanilla:['maple syrup','almond extract (half)'],
+        rice:['quinoa','cauliflower rice'],
+        pasta:['gluten-free pasta','zucchini noodles'],
+        bread:['gluten-free bread','lettuce wraps'],
+        mayonnaise:['greek yogurt','mashed avocado','vegan mayo'],
+        vinegar:['lemon juice','lime juice','apple cider vinegar'],
+        lemon:['lime','vinegar'],
+        'olive oil':['avocado oil','canola oil'],
+        chicken:['tofu','turkey','chickpeas'],
+        beef:['turkey mince','lentils + mushrooms'],
+        shrimp:['firm tofu','white fish'],
+        parmesan:['pecorino','nutritional yeast'],
+        cheese:['vegan cheese','nutritional yeast'],
+      };
+
+      function offlineAssistant(question, recipe, includeContext, reason='') {
+        const q = question.toLowerCase();
+        const keys = Object.keys(OFFLINE_SUBS);
+        const found = keys.find(k => q.includes(k));
+        const out = [];
+        out.push('Offline suggestion:');
+
+        const vegan = /vegan/.test(q);
+        const gf = /gluten[-\s]?free|\bgf\b/.test(q);
+        const lowCal = /reduce calories|lower calories|lighter/.test(q);
+        const under30 = /under\s*30|quick|faster/.test(q);
+
+        if (found) {
+          out.push(`Substitutes for ${found}:`);
+          OFFLINE_SUBS[found].forEach((s, i) => out.push(`${i+1}. ${s}`));
+        }
+        if (vegan) out.push('To make this vegan: use tofu/tempeh/lentils for meat, oat milk/cashew cream for dairy, flax or chia eggs, and maple syrup instead of honey.');
+        if (gf) out.push('To make this gluten-free: choose GF flour blend, tamari instead of soy sauce, and gluten-free pasta/bread/breadcrumbs.');
+        if (lowCal) out.push('To reduce calories: trim added oil, swap cream for yogurt/cashew cream, increase vegetables, and use lean proteins.');
+        if (under30) out.push('To get under 30 minutes: prep ingredients first, use pre-cut vegetables, canned beans, and cook components in parallel.');
+
+        if (!found && !vegan && !gf && !lowCal && !under30) {
+          out.push('Balance flavor with acid (lemon/vinegar), seasoning in small steps, and texture contrast (crunch + creamy).');
+        }
+
+        if (includeContext && recipe) {
+          if (recipe.tags.includes('desserts') || recipe.category === 'Dessert') out.push('Context note: this is a dessert, so keep sweetness and structure balanced when swapping.');
+          if (recipe.tags.includes('vegan')) out.push('Context note: this recipe is already vegan.');
+          if (recipe.tags.includes('asian')) out.push('Context note: preserve umami with tamari, ginger, mushrooms, and sesame accents.');
+        }
+        if (reason) out.push(`(Using offline mode because: ${reason})`);
+        return { answer: out.join('\n'), patch: null };
+      }
+
+      function openAI() {
+        state.aiPatch = null;
+        $('applyAiPatchBtn').disabled = true;
+        $('aiPrompt').value = '';
+        const key = localStorage.getItem('openai_api_key') || '';
+        $('aiResponse').textContent = key ? 'No response yet.' : 'No API key set. The assistant will use Offline suggestion mode automatically.';
+        openModal('aiModal');
+      }
+
+      async function askAI() {
+        const prompt = $('aiPrompt').value.trim();
+        if (!prompt) return toast('Please enter a question.', 'error');
+
+        const recipe = state.recipes.find(r => r.id === state.selectedId);
+        const include = $('includeContext').checked && recipe;
+        const key = localStorage.getItem('openai_api_key') || '';
+
+        if (!key || !navigator.onLine) {
+          const reason = !key ? 'no API key set' : 'offline network';
+          const offline = offlineAssistant(prompt, recipe, include, reason);
+          $('aiResponse').textContent = offline.answer;
+          state.aiPatch = offline.patch;
+          $('applyAiPatchBtn').disabled = !offline.patch;
+          return;
+        }
+
+        $('aiResponse').textContent = 'Thinking...';
+        try {
+          const res = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              response_format: { type: 'json_object' },
+              messages: [
+                { role: 'system', content: 'You are a practical cooking assistant. Return strict JSON with keys: answer (string), patch (object|null).' },
+                { role: 'user', content: JSON.stringify({ prompt, recipe: include ? recipe : null }) }
+              ]
+            })
+          });
+          if (!res.ok) throw new Error(`OpenAI request failed (${res.status})`);
+          const data = await res.json();
+          const parsed = JSON.parse(data.choices?.[0]?.message?.content || '{}');
+          $('aiResponse').textContent = parsed.answer || 'No answer provided.';
+          state.aiPatch = parsed.patch && typeof parsed.patch === 'object' ? parsed.patch : null;
+          $('applyAiPatchBtn').disabled = !state.aiPatch;
+        } catch (err) {
+          const offline = offlineAssistant(prompt, recipe, include, err.message || 'OpenAI unavailable');
+          $('aiResponse').textContent = offline.answer;
+          state.aiPatch = offline.patch;
+          $('applyAiPatchBtn').disabled = !offline.patch;
+          toast('OpenAI unavailable. Showing offline suggestion.', 'error');
+        }
+      }
+
+      function applyAIPatch() {
+        if (!state.aiPatch) return;
+        const idx = state.recipes.findIndex(r => r.id === state.selectedId);
+        if (idx < 0) return;
+        const merged = sanitizeRecipe({ ...state.recipes[idx], ...state.aiPatch, updatedAt: now() });
+        if (!merged.title || !merged.ingredients.length || !merged.steps.length) {
+          toast('Patch rejected due to missing essential fields.', 'error');
+          return;
+        }
+        state.recipes[idx] = merged;
+        save();
+        closeModal('aiModal');
+        renderAll();
+        toast('AI suggestion applied.', 'success');
+      }
+
+      function exportData() {
+        const blob = new Blob([JSON.stringify(state.recipes, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `harvest-table-${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('Export complete.', 'success');
+      }
+
+      async function importData(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          if (!Array.isArray(parsed)) throw new Error('JSON must be an array of recipes.');
+          const incoming = parsed.map(sanitizeRecipe).filter(r => r.title);
+          const byId = new Map(state.recipes.map(r => [r.id, r]));
+          incoming.forEach(r => byId.set(r.id, { ...(byId.get(r.id)||{}), ...r, updatedAt: now() }));
+          state.recipes = [...byId.values()];
+          state.selectedId = state.recipes[0]?.id || null;
+          save();
+          renderAll();
+          toast(`Imported ${incoming.length} recipe(s).`, 'success');
+        } catch (err) {
+          toast(`Import failed: ${err.message || err}`, 'error');
+        } finally {
+          e.target.value = '';
+        }
+      }
+
+      function resetAll() {
+        if (!confirm('Reset all recipes and restore starter collection?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state.recipes = starterRecipes();
+        state.selectedId = state.recipes[0]?.id || null;
+        save();
+        renderAll();
+        toast('Reset complete.', 'success');
+      }
+
+      function renderAll(refreshFilters=true) {
+        if (refreshFilters) renderFilterOptions();
+        renderGrid();
+      }
+
+      function bindEvents() {
+        bindModalClose();
+
+        $('searchInput').addEventListener('input', (e) => { state.filters.search = e.target.value; renderAll(false); });
+        $('categoryFilter').addEventListener('change', (e) => { state.filters.category = e.target.value; renderAll(false); });
+        $('tagFilter').addEventListener('change', (e) => { state.filters.tag = e.target.value; renderAll(false); });
+        $('sortBy').addEventListener('change', (e) => { state.filters.sort = e.target.value; renderAll(false); });
+        $('favoritesFilter').addEventListener('change', (e) => { state.filters.favoritesOnly = e.target.value === 'fav'; renderAll(false); });
+
+        $('recipesGrid').addEventListener('click', (e) => {
+          const card = e.target.closest('[data-id]');
+          if (!card) return;
+          openRecipeModal(card.dataset.id);
+        });
+
+        $('newRecipeBtn').addEventListener('click', () => openEditor());
+        $('settingsBtn').addEventListener('click', openSettings);
+        $('shoppingBtn').addEventListener('click', openShopping);
+        $('searchFocusBtn').addEventListener('click', () => $('searchInput').focus());
+
+        $('saveApiKeyBtn').addEventListener('click', () => {
+          localStorage.setItem('openai_api_key', $('apiKeyInput').value.trim());
+          toast('API key saved.', 'success');
+        });
+        $('clearApiKeyBtn').addEventListener('click', () => {
+          localStorage.removeItem('openai_api_key');
+          $('apiKeyInput').value = '';
+          toast('API key cleared.', 'success');
+        });
+
+        $('exportBtn').addEventListener('click', exportData);
+        $('importBtn').addEventListener('click', () => $('importFile').click());
+        $('importFile').addEventListener('change', importData);
+        $('resetBtn').addEventListener('click', resetAll);
+
+        $('askAiBtn').addEventListener('click', askAI);
+        $('applyAiPatchBtn').addEventListener('click', applyAIPatch);
+
+        const dd = $('categoryDropdown');
+        $('allRecipesBtn').addEventListener('click', () => dd.classList.toggle('open'));
+        $('allRecipesPanel').addEventListener('click', (e) => {
+          const cat = e.target.dataset.cat;
+          if (cat === undefined) return;
+          state.filters.category = cat;
+          $('categoryFilter').value = cat;
+          dd.classList.remove('open');
+          renderAll(false);
+        });
+        document.addEventListener('click', (e) => {
+          if (!dd.contains(e.target)) dd.classList.remove('open');
+        });
+      }
+
+      load();
+      bindEvents();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
